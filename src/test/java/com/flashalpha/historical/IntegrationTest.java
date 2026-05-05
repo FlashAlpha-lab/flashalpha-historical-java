@@ -304,15 +304,75 @@ public class IntegrationTest {
     // ── VRP ───────────────────────────────────────────────────────────────
 
     @Test
-    public void vrp_DashboardKeysAndHySpreadHardcode() {
+    public void vrp_EveryFieldDeclaredInPocoMustBeReferenced() {
         JsonObject v = hx.vrp("SPY", SPY_AT);
-        JsonObject core = v.getAsJsonObject("vrp");
-        for (String k : new String[] {
-                "atm_iv", "rv_5d", "rv_10d", "rv_20d", "rv_30d",
-                "vrp_5d", "vrp_10d", "vrp_20d", "vrp_30d"}) {
-            assertTrue(k, core.has(k));
+
+        // ── top-level scalars ──
+        assertEquals("SPY", v.get("symbol").getAsString());
+        assertTrue(v.get("underlying_price").getAsJsonPrimitive().isNumber());
+        assertTrue(v.get("as_of").getAsJsonPrimitive().isString());
+        assertTrue(v.get("market_open").getAsJsonPrimitive().isBoolean());
+        for (String k : new String[] {"variance_risk_premium", "convexity_premium", "fair_vol"}) {
+            assertTrue(k, v.get(k).getAsJsonPrimitive().isNumber());
         }
-        assertEquals(3.5, v.getAsJsonObject("macro").get("hy_spread").getAsDouble(), 1e-9);
+        assertTrue(v.get("warnings").isJsonArray());
+        assertTrue("dealer_flow_risk key", v.has("dealer_flow_risk"));
+        // strategy_scores / net_harvest_score nullable on historical
+        assertTrue("strategy_scores key", v.has("strategy_scores"));
+        assertTrue("net_harvest_score key", v.has("net_harvest_score"));
+        // Customer trap: net_gex must NOT be top-level
+        assertFalse("net_gex must NOT be top-level", v.has("net_gex"));
+
+        // ── vrp.* core block ──
+        JsonObject core = v.getAsJsonObject("vrp");
+        for (String k : new String[] {"atm_iv", "rv_5d", "rv_10d", "rv_20d", "rv_30d",
+                                       "vrp_5d", "vrp_10d", "vrp_20d", "vrp_30d"}) {
+            assertTrue("vrp." + k, core.get(k).getAsJsonPrimitive().isNumber());
+        }
+        assertTrue("vrp.z_score key", core.has("z_score"));
+        assertTrue("vrp.percentile key", core.has("percentile"));
+        assertTrue("vrp.history_days", core.get("history_days").getAsJsonPrimitive().isNumber());
+
+        // ── directional ──
+        JsonObject dir = v.getAsJsonObject("directional");
+        for (String k : new String[] {"put_wing_iv_25d", "call_wing_iv_25d",
+                                       "downside_rv_20d", "upside_rv_20d",
+                                       "downside_vrp", "upside_vrp"}) {
+            assertTrue("directional." + k, dir.get(k).getAsJsonPrimitive().isNumber());
+        }
+        assertFalse("put_vrp must NOT exist", dir.has("put_vrp"));
+        assertFalse("call_vrp must NOT exist", dir.has("call_vrp"));
+
+        // ── term_vrp[] ──
+        JsonArray term = v.getAsJsonArray("term_vrp");
+        assertTrue("term_vrp non-empty", term.size() > 0);
+        JsonObject first = term.get(0).getAsJsonObject();
+        for (String k : new String[] {"dte", "iv", "rv", "vrp"}) {
+            assertTrue("term_vrp[0]." + k, first.has(k));
+        }
+
+        // ── gex_conditioned + vanna_conditioned ──
+        JsonObject gc = v.getAsJsonObject("gex_conditioned");
+        assertTrue(gc.get("regime").getAsJsonPrimitive().isString());
+        assertTrue(gc.get("harvest_score").getAsJsonPrimitive().isNumber());
+        assertTrue(gc.get("interpretation").getAsJsonPrimitive().isString());
+        JsonObject vc = v.getAsJsonObject("vanna_conditioned");
+        assertTrue(vc.get("outlook").getAsJsonPrimitive().isString());
+        assertTrue(vc.get("interpretation").getAsJsonPrimitive().isString());
+
+        // ── regime — net_gex lives HERE ──
+        JsonObject reg = v.getAsJsonObject("regime");
+        assertTrue(reg.get("gamma").getAsJsonPrimitive().isString());
+        assertTrue("regime.vrp_regime key", reg.has("vrp_regime"));
+        assertTrue(reg.get("net_gex").getAsJsonPrimitive().isNumber());
+        assertTrue(reg.get("gamma_flip").getAsJsonPrimitive().isNumber());
+
+        // ── macro (historical-specific) ──
+        JsonObject macro = v.getAsJsonObject("macro");
+        for (String k : new String[] {"vix", "vix_3m", "vix_term_slope", "dgs10", "hy_spread"}) {
+            assertTrue("macro." + k, macro.get(k).getAsJsonPrimitive().isNumber());
+        }
+        assertFalse("macro.fed_funds must NOT exist on historical", macro.has("fed_funds"));
     }
 
     // ── Max Pain ──────────────────────────────────────────────────────────
