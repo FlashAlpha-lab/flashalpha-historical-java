@@ -36,7 +36,8 @@ public class IntegrationTest {
     static {
         REGIMES.add("positive_gamma");
         REGIMES.add("negative_gamma");
-        REGIMES.add("transition");
+        REGIMES.add("neutral");
+        REGIMES.add("undetermined");
     }
 
     private static String API_KEY;
@@ -132,20 +133,59 @@ public class IntegrationTest {
     // ── Exposure ──────────────────────────────────────────────────────────
 
     @Test
-    public void exposureSummary_ShapeAndInvariants() {
+    public void exposureSummary_EveryFieldDeclaredInPocoMustBeReferenced() {
         JsonObject s = hx.exposureSummary("SPY", SPY_AT);
+        // ── top-level scalars ──
         assertEquals("SPY", s.get("symbol").getAsString());
+        assertTrue(s.get("underlying_price").getAsJsonPrimitive().isNumber());
         assertTrue(Math.abs(s.get("underlying_price").getAsDouble() - EXPECTED_SPOT) < SPOT_TOL);
+        assertTrue(s.get("as_of").getAsJsonPrimitive().isString());
+        assertFalse(s.get("as_of").getAsString().isEmpty());
+        assertEquals(SPY_AT, s.get("as_of").getAsString()); // historical snaps to requested minute
         assertTrue(REGIMES.contains(s.get("regime").getAsString()));
         assertTrue(s.get("gamma_flip").getAsJsonPrimitive().isNumber());
+        // ── exposures block (4 fields) ──
         JsonObject e = s.getAsJsonObject("exposures");
         for (String k : new String[] {"net_gex", "net_dex", "net_vex", "net_chex"}) {
-            assertTrue(e.get(k).getAsJsonPrimitive().isNumber());
+            assertTrue("exposures." + k, e.get(k).getAsJsonPrimitive().isNumber());
         }
+        // ── interpretation block (3 fields) ──
+        JsonObject interp = s.getAsJsonObject("interpretation");
+        for (String k : new String[] {"gamma", "vanna", "charm"}) {
+            assertTrue("interpretation." + k + " is string",
+                    interp.get(k).getAsJsonPrimitive().isString());
+            assertFalse("interpretation." + k + " not empty",
+                    interp.get(k).getAsString().isEmpty());
+        }
+        // ── hedging_estimate (every leaf on both sides) ──
         JsonObject h = s.getAsJsonObject("hedging_estimate");
+        for (String sideKey : new String[] {"spot_up_1pct", "spot_down_1pct"}) {
+            JsonObject side = h.getAsJsonObject(sideKey);
+            String dir = side.get("direction").getAsString();
+            assertTrue(sideKey + ".direction=" + dir, "buy".equals(dir) || "sell".equals(dir));
+            assertTrue(sideKey + ".dealer_shares_to_trade",
+                    side.get("dealer_shares_to_trade").getAsJsonPrimitive().isNumber());
+            assertTrue(sideKey + ".notional_usd",
+                    side.get("notional_usd").getAsJsonPrimitive().isNumber());
+            assertNotEquals(0L, side.get("notional_usd").getAsLong());
+        }
         long up = h.getAsJsonObject("spot_up_1pct").get("dealer_shares_to_trade").getAsLong();
         long dn = h.getAsJsonObject("spot_down_1pct").get("dealer_shares_to_trade").getAsLong();
         assertEquals(up, -dn);
+        // ── zero_dte block (3 fields) ──
+        JsonObject z = s.getAsJsonObject("zero_dte");
+        assertNotNull("zero_dte block", z);
+        assertTrue("zero_dte.net_gex key present", z.has("net_gex"));
+        assertTrue("zero_dte.net_gex null or number",
+                z.get("net_gex").isJsonNull() || z.get("net_gex").getAsJsonPrimitive().isNumber());
+        assertTrue("zero_dte.pct_of_total_gex key present", z.has("pct_of_total_gex"));
+        assertTrue("zero_dte.pct_of_total_gex null or number",
+                z.get("pct_of_total_gex").isJsonNull()
+                        || z.get("pct_of_total_gex").getAsJsonPrimitive().isNumber());
+        assertTrue("zero_dte.expiration key present", z.has("expiration"));
+        assertTrue("zero_dte.expiration null or string",
+                z.get("expiration").isJsonNull()
+                        || z.get("expiration").getAsJsonPrimitive().isString());
     }
 
     @Test
