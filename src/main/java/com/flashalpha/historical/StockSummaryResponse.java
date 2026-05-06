@@ -154,7 +154,7 @@ public final class StockSummaryResponse {
 
     public static final class ZeroDteShare {
         @SerializedName("net_gex") public Double netGex;
-        @SerializedName("pct_of_total_gex") public Double pctOfTotalGex;
+        @SerializedName("pct_of_total") public Double pctOfTotal;
         @SerializedName("expiration") public String expiration;
     }
 
@@ -188,26 +188,40 @@ public final class StockSummaryResponse {
 
     public static final class VixTermStructure {
         @SerializedName("levels") public VixTermLevels levels;
-        /** {@code (vix3m - vix) / vix * 100}. Positive = contango. */
-        @SerializedName("slope") public Double slope;
-        @SerializedName("regime") public String regime;
+        /** Near-tenor slope: {@code (vix3m - vix) / vix * 100}. Positive = contango. */
+        @SerializedName("near_slope_pct") public Double nearSlopePct;
+        /** {@code "contango"} or {@code "backwardation"}. */
+        @SerializedName("structure") public String structure;
     }
 
     public static final class VixTermLevels {
+        /** VIX9D (9-day VIX). */
+        @SerializedName("vix9d") public Double vix9d;
+        /** VIX (30-day, the standard headline index). */
         @SerializedName("vix")   public Double vix;
+        /** VIX3M (3-month VIX). */
         @SerializedName("vix3m") public Double vix3m;
+        /** VIX6M (6-month VIX). */
         @SerializedName("vix6m") public Double vix6m;
-        @SerializedName("vix9m") public Double vix9m;
     }
 
     public static final class VixFutures {
-        /** Approximated VIX3M − VIX, not a true futures basis. */
-        @SerializedName("basis") public Double basis;
-        @SerializedName("regime") public String regime;
+        /** Front-month VIX futures price (proxied from VIX3M). */
+        @SerializedName("front_month") public Double frontMonth;
+        /** Spot VIX. */
+        @SerializedName("spot") public Double spot;
+        /** {@code front_month - spot}. */
+        @SerializedName("spread") public Double spread;
+        /** Basis as a percent of spot. */
+        @SerializedName("basis_pct") public Double basisPct;
+        /** {@code "contango"} or {@code "backwardation"}. */
+        @SerializedName("basis") public String basis;
     }
 
     public static final class FearAndGreed {
-        @SerializedName("value") public Integer value;
+        /** 0-100 composite (0 = extreme fear, 100 = extreme greed). */
+        @SerializedName("score") public Integer score;
+        /** Bucket label (e.g. {@code "Extreme Fear"}, {@code "Neutral"}, {@code "Extreme Greed"}). */
         @SerializedName("rating") public String rating;
     }
 }
