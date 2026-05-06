@@ -39,10 +39,8 @@ public final class ExposureSummaryResponse {
     public Double gammaFlip;
 
     /**
-     * Confirmed live values across all 5 SDK integration test suites:
-     *   positive_gamma | negative_gamma | neutral
-     * Documented fourth: undetermined (no usable options data). `neutral`
-     * appears in edge cases where net_gex straddles zero.
+     * One of: positive_gamma | negative_gamma | unknown
+     * (`unknown` when no usable options data / no gamma flip).
      */
     @SerializedName("regime")
     public String regime;

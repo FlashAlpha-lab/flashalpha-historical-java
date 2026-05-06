@@ -116,7 +116,7 @@ public final class StockSummaryResponse {
         @SerializedName("max_pain") public Double maxPain;
         @SerializedName("highest_oi_strike") public Double highestOiStrike;
 
-        /** {@code "positive_gamma"} | {@code "negative_gamma"} | {@code "undetermined"}. */
+        /** {@code "positive_gamma"} | {@code "negative_gamma"} | {@code "unknown"}. */
         @SerializedName("regime") public String regime;
 
         @SerializedName("interpretation") public Interpretation interpretation;
