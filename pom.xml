@@ -7,7 +7,7 @@
 
     <groupId>com.flashalpha</groupId>
     <artifactId>flashalpha-historical</artifactId>
-    <version>0.4.0-RC1</version>
+    <version>0.4.0-RC2</version>
     <packaging>jar</packaging>
 
     <name>FlashAlpha Historical Java SDK</name>
