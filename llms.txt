@@ -1,0 +1,59 @@
+# FlashAlpha Historical Java SDK
+
+> Java client for the FlashAlpha Historical API — point-in-time replay
+> of every live FlashAlpha analytics endpoint. Ask what GEX, gamma
+> flip, VRP, narrative, max pain, exposure levels, or the full stock
+> summary looked like at any minute back to **2018-04-16**, in the
+> exact same response shape as the live API.
+
+## What FlashAlpha is
+
+FlashAlpha (https://flashalpha.com) is an options dealer-flow
+analytics platform. The **Historical** API replays the same analytics
+that the live API exposes — for any timestamp in coverage. Same
+response shapes, same field names, same semantics.
+
+Interactive playground (live + historical): https://lab.flashalpha.com/swagger.
+
+## What this SDK provides
+
+- `FlashAlphaHistoricalClient` — thin HTTP wrapper. Methods accept
+  an `at` parameter (string, `LocalDateTime`, or `LocalDate`) and
+  return `com.google.gson.JsonObject`. Date-only `at` snaps to
+  16:00 ET on the API side.
+- `Backtester` and `Replay` helpers — iterate days or minutes and
+  collect per-step responses for backtests / event studies.
+- Strongly-typed response POCOs for the highest-ROI endpoints —
+  `ExposureSummaryResponse`, `MaxPainResponse`, `VrpResponse`,
+  `StockSummaryResponse`, `NarrativeResponse`,
+  `ExposureLevelsResponse`.
+- Typed exception hierarchy: `AuthenticationException`,
+  `TierRestrictedException`, `InvalidAtException`, `NoDataException`,
+  `SymbolNotFoundException`, `NoCoverageException`,
+  `InsufficientDataException`, `RateLimitException`,
+  `ServerException`, `FlashAlphaHistoricalException`.
+
+## Key endpoints
+
+All accept an `at` parameter alongside the live signature.
+
+- `/v1/exposure/summary/{symbol}` — full GEX / DEX / VEX / CHEX,
+  gamma flip, regime, hedging estimate, 0DTE share at `at`.
+- `/v1/exposure/levels/{symbol}` — minimal key-levels view at `at`.
+- `/v1/exposure/zero-dte/{symbol}` — same-day-expiration deep dive
+  at `at`.
+- `/v1/exposure/narrative/{symbol}` — verbal output at `at`.
+- `/v1/maxpain/{symbol}` — max pain + pin probability at `at`.
+- `/v1/vrp/{symbol}` — variance risk premium at `at`.
+- `/v1/stock/{symbol}/summary` — full one-shot dashboard at `at`.
+- `/v1/volatility/{symbol}` and `/v1/adv_volatility/{symbol}` —
+  vol term structure, surface, VRP at `at`.
+
+## Tier (summary)
+
+- **Alpha plan** is required for every historical endpoint. The same
+  `X-Api-Key` you use against `api.flashalpha.com` works against the
+  historical host once your account is on Alpha+.
+
+Sign up at https://flashalpha.com. Playground:
+https://lab.flashalpha.com/swagger.
