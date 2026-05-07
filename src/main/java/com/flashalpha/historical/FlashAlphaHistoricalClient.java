@@ -1,5 +1,6 @@
 package com.flashalpha.historical;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -44,6 +45,7 @@ public class FlashAlphaHistoricalClient {
     private final String baseUrl;
     private final HttpClient http;
     private final Duration timeout;
+    private final Gson gson = new Gson();
 
     public FlashAlphaHistoricalClient(String apiKey) {
         this(apiKey, DEFAULT_BASE_URL);
@@ -262,14 +264,73 @@ public class FlashAlphaHistoricalClient {
     public JsonObject exposureSummary(String symbol, LocalDateTime at) { return exposureSummary(symbol, formatAt(at)); }
     public JsonObject exposureSummary(String symbol, LocalDate at)     { return exposureSummary(symbol, formatAt(at)); }
 
+    /**
+     * Strongly-typed variant of {@link #exposureSummary(String, String)}. Returns
+     * a populated {@link ExposureSummaryResponse} with named fields. The original
+     * untyped method is unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string, e.g. {@code "2020-03-16T15:30:00"}.
+     */
+    public ExposureSummaryResponse exposureSummaryTyped(String symbol, String at) {
+        JsonObject raw = exposureSummary(symbol, at);
+        return gson.fromJson(raw, ExposureSummaryResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #exposureSummary(String, LocalDateTime)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute as a {@link LocalDateTime}.
+     */
+    public ExposureSummaryResponse exposureSummaryTyped(String symbol, LocalDateTime at) {
+        return exposureSummaryTyped(symbol, formatAt(at));
+    }
+
+    /**
+     * Strongly-typed variant of {@link #exposureSummary(String, LocalDate)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET date (the API defaults to 16:00 ET).
+     */
+    public ExposureSummaryResponse exposureSummaryTyped(String symbol, LocalDate at) {
+        return exposureSummaryTyped(symbol, formatAt(at));
+    }
+
     /** Key technical levels — gamma flip, walls, max +/- gamma, highest-OI, 0DTE magnet. */
     public JsonObject exposureLevels(String symbol, String at) {
         return get("/v1/exposure/levels/" + seg(symbol), atMap(at));
     }
 
+    /**
+     * Strongly-typed variant of {@link #exposureLevels(String, String)}. Returns
+     * a populated {@link ExposureLevelsResponse}. The original untyped method
+     * is unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public ExposureLevelsResponse exposureLevelsTyped(String symbol, String at) {
+        JsonObject raw = exposureLevels(symbol, at);
+        return gson.fromJson(raw, ExposureLevelsResponse.class);
+    }
+
     /** Verbal narrative analysis + prior-day GEX comparison + VIX context. */
     public JsonObject narrative(String symbol, String at) {
         return get("/v1/exposure/narrative/" + seg(symbol), atMap(at));
+    }
+
+    /**
+     * Strongly-typed variant of {@link #narrative(String, String)}. Returns a
+     * populated {@link NarrativeResponse}. The original untyped method is
+     * unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public NarrativeResponse narrativeTyped(String symbol, String at) {
+        JsonObject raw = narrative(symbol, at);
+        return gson.fromJson(raw, NarrativeResponse.class);
     }
 
     /** 0DTE-specific analytics — regime, expected move, pin risk, hedging, decay, flow. */
@@ -292,6 +353,30 @@ public class FlashAlphaHistoricalClient {
 
     public JsonObject maxPain(String symbol, String at) { return maxPain(symbol, at, null); }
 
+    /**
+     * Strongly-typed variant of {@link #maxPain(String, String, String)}.
+     * Returns a populated {@link MaxPainResponse}. The original untyped method
+     * is unchanged.
+     *
+     * @param symbol     Underlying symbol.
+     * @param at         ET wall-clock minute string.
+     * @param expiration Expiration date filter (nullable, format {@code yyyy-MM-dd}).
+     */
+    public MaxPainResponse maxPainTyped(String symbol, String at, String expiration) {
+        JsonObject raw = maxPain(symbol, at, expiration);
+        return gson.fromJson(raw, MaxPainResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #maxPain(String, String)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public MaxPainResponse maxPainTyped(String symbol, String at) {
+        return maxPainTyped(symbol, at, null);
+    }
+
     // ── Composite ─────────────────────────────────────────────────────
 
     /** Full composite snapshot — price, vol, options flow, exposure, macro. */
@@ -300,6 +385,29 @@ public class FlashAlphaHistoricalClient {
     }
 
     public JsonObject stockSummary(String symbol, LocalDateTime at) { return stockSummary(symbol, formatAt(at)); }
+
+    /**
+     * Strongly-typed variant of {@link #stockSummary(String, String)}. Returns
+     * a populated {@link StockSummaryResponse} with named fields. The original
+     * untyped method is unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public StockSummaryResponse stockSummaryTyped(String symbol, String at) {
+        JsonObject raw = stockSummary(symbol, at);
+        return gson.fromJson(raw, StockSummaryResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #stockSummary(String, LocalDateTime)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute as a {@link LocalDateTime}.
+     */
+    public StockSummaryResponse stockSummaryTyped(String symbol, LocalDateTime at) {
+        return stockSummaryTyped(symbol, formatAt(at));
+    }
 
     // ── Volatility ────────────────────────────────────────────────────
 
@@ -321,4 +429,28 @@ public class FlashAlphaHistoricalClient {
     }
 
     public JsonObject vrp(String symbol, LocalDateTime at) { return vrp(symbol, formatAt(at)); }
+
+    /**
+     * Strongly-typed variant of {@link #vrp(String, String)}. Returns a populated
+     * {@link VrpResponse} with named fields for the nested VRP, directional,
+     * regime, gex_conditioned, strategy_scores, and term_vrp groups. The
+     * original untyped method is unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public VrpResponse vrpTyped(String symbol, String at) {
+        JsonObject raw = vrp(symbol, at);
+        return gson.fromJson(raw, VrpResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #vrp(String, LocalDateTime)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute as a {@link LocalDateTime}.
+     */
+    public VrpResponse vrpTyped(String symbol, LocalDateTime at) {
+        return vrpTyped(symbol, formatAt(at));
+    }
 }
