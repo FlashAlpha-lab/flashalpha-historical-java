@@ -55,7 +55,7 @@ public final class NarrativeResponse {
         @SerializedName("gamma_flip") public Double gammaFlip;
         @SerializedName("call_wall") public Double callWall;
         @SerializedName("put_wall") public Double putWall;
-        /** {@code "positive_gamma"} | {@code "negative_gamma"} | {@code "undetermined"}. */
+        /** {@code "positive_gamma"} | {@code "negative_gamma"} | {@code "unknown"}. */
         @SerializedName("regime") public String regime;
         @SerializedName("zero_dte_pct") public Double zeroDtePct;
         @SerializedName("top_oi_changes") public List<OiChangeRow> topOiChanges;

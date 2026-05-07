@@ -36,8 +36,7 @@ public class IntegrationTest {
     static {
         REGIMES.add("positive_gamma");
         REGIMES.add("negative_gamma");
-        REGIMES.add("neutral");
-        REGIMES.add("undetermined");
+        REGIMES.add("unknown");
     }
 
     private static String API_KEY;
@@ -396,6 +395,230 @@ public class IntegrationTest {
         }
         assertTrue("min total_pain at " + bestStrike + " but max_pain_strike=" + maxPainStrike,
                 Math.abs(bestStrike - maxPainStrike) <= 5);
+    }
+
+    // ── rc.4 typed POCO field-walk tests ──────────────────────────────────
+    //
+    // Mirror of the *EveryFieldDeclaredInPocoMustBeReferenced pattern but
+    // walked through the typed POCOs. A renamed wire field surfaces as a
+    // null assertion failure. Historical-mode documented gaps (zero
+    // volumes, null pc_ratio_volume, null vix_futures, null fear_and_greed)
+    // are explicitly accommodated.
+
+    @Test
+    public void testStockSummary_EveryFieldDeclaredInPocoMustBeReferenced() {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        JsonObject json = hx.stockSummary("SPY", SPY_AT);
+        StockSummaryResponse r = gson.fromJson(json, StockSummaryResponse.class);
+
+        // ── top-level ──
+        assertEquals("SPY", r.symbol);
+        assertEquals(SPY_AT, r.asOf);
+        assertNotNull("market_open", r.marketOpen);
+
+        // ── price ──
+        assertNotNull("price", r.price);
+        assertNotNull("price.bid", r.price.bid);
+        assertNotNull("price.ask", r.price.ask);
+        assertNotNull("price.mid", r.price.mid);
+        assertNotNull("price.last", r.price.last);
+        assertNotNull("price.last_update", r.price.lastUpdate);
+
+        // ── volatility ──
+        assertNotNull("volatility", r.volatility);
+        assertNotNull("volatility.atm_iv", r.volatility.atmIv);
+        assertNotNull("volatility.hv_20", r.volatility.hv20);
+        assertNotNull("volatility.hv_60", r.volatility.hv60);
+        assertNotNull("volatility.vrp", r.volatility.vrp);
+
+        // skew_25d — full 7-field block (rc.4)
+        assertNotNull("volatility.skew_25d", r.volatility.skew25d);
+        assertNotNull("skew_25d.expiry", r.volatility.skew25d.expiry);
+        assertNotNull("skew_25d.days_to_expiry", r.volatility.skew25d.daysToExpiry);
+        assertNotNull("skew_25d.put_25d_iv", r.volatility.skew25d.put25dIv);
+        assertNotNull("skew_25d.atm_iv", r.volatility.skew25d.atmIv);
+        assertNotNull("skew_25d.call_25d_iv", r.volatility.skew25d.call25dIv);
+        assertNotNull("skew_25d.skew_25d", r.volatility.skew25d.skew25d);
+        assertNotNull("skew_25d.smile_ratio", r.volatility.skew25d.smileRatio);
+
+        // iv_term_structure
+        assertNotNull("iv_term_structure", r.volatility.ivTermStructure);
+        assertFalse("iv_term_structure non-empty", r.volatility.ivTermStructure.isEmpty());
+        StockSummaryResponse.TermStructureRow tsr = r.volatility.ivTermStructure.get(0);
+        assertNotNull("term_structure[0].expiry", tsr.expiry);
+        assertNotNull("term_structure[0].days_to_expiry", tsr.daysToExpiry);
+        assertNotNull("term_structure[0].iv", tsr.iv);
+
+        // ── options_flow (rc.4 wire uses total_* prefix; historical-mode
+        // has zero volumes and null pc_ratio_volume — documented gap) ──
+        assertNotNull("options_flow", r.optionsFlow);
+        assertNotNull("options_flow.total_call_oi", r.optionsFlow.callOi);
+        assertNotNull("options_flow.total_put_oi", r.optionsFlow.putOi);
+        // call/put_volume are present but 0 in historical mode
+        assertNotNull("options_flow.total_call_volume", r.optionsFlow.callVolume);
+        assertNotNull("options_flow.total_put_volume", r.optionsFlow.putVolume);
+        assertEquals(0L, (long) r.optionsFlow.callVolume);
+        assertEquals(0L, (long) r.optionsFlow.putVolume);
+        assertNotNull("options_flow.pc_ratio_oi", r.optionsFlow.pcRatioOi);
+        // pc_ratio_volume is null in historical mode (zero volumes → div-by-0)
+        assertNotNull("options_flow.active_expirations", r.optionsFlow.activeExpirations);
+
+        // ── exposure ──
+        assertNotNull("exposure", r.exposure);
+        assertNotNull("exposure.net_gex", r.exposure.netGex);
+        assertNotNull("exposure.net_dex", r.exposure.netDex);
+        assertNotNull("exposure.net_vex", r.exposure.netVex);
+        assertNotNull("exposure.net_chex", r.exposure.netChex);
+        assertNotNull("exposure.gamma_flip", r.exposure.gammaFlip);
+        assertNotNull("exposure.call_wall", r.exposure.callWall);
+        assertNotNull("exposure.put_wall", r.exposure.putWall);
+        assertNotNull("exposure.max_pain", r.exposure.maxPain);
+        assertNotNull("exposure.highest_oi_strike", r.exposure.highestOiStrike);
+        assertNotNull("exposure.regime", r.exposure.regime);
+        assertTrue("exposure.regime=" + r.exposure.regime, REGIMES.contains(r.exposure.regime));
+        assertNotNull("exposure.oi_weighted_dte", r.exposure.oiWeightedDte);
+
+        assertNotNull("interpretation", r.exposure.interpretation);
+        assertNotNull("interpretation.gamma", r.exposure.interpretation.gamma);
+        assertNotNull("interpretation.vanna", r.exposure.interpretation.vanna);
+        assertNotNull("interpretation.charm", r.exposure.interpretation.charm);
+
+        assertNotNull("hedging_estimate", r.exposure.hedgingEstimate);
+        StockSummaryResponse.HedgingMove[] hMoves = {
+                r.exposure.hedgingEstimate.spotUp1Pct,
+                r.exposure.hedgingEstimate.spotDown1Pct,
+        };
+        String[] hNames = {"spot_up_1pct", "spot_down_1pct"};
+        for (int i = 0; i < hMoves.length; i++) {
+            assertNotNull("hedging_estimate." + hNames[i], hMoves[i]);
+            assertNotNull(hNames[i] + ".dealer_shares", hMoves[i].dealerShares);
+            assertNotNull(hNames[i] + ".direction", hMoves[i].direction);
+            assertTrue(hNames[i] + ".direction=" + hMoves[i].direction,
+                    "buy".equals(hMoves[i].direction) || "sell".equals(hMoves[i].direction));
+            assertNotNull(hNames[i] + ".notional_usd", hMoves[i].notionalUsd);
+        }
+
+        assertNotNull("zero_dte", r.exposure.zeroDte);
+        assertNotNull("zero_dte.net_gex", r.exposure.zeroDte.netGex);
+        assertNotNull("zero_dte.pct_of_total", r.exposure.zeroDte.pctOfTotal);
+        // zero_dte.expiration may be null on no-0DTE days
+
+        // top_strikes (rc.4 adds total_oi)
+        assertNotNull("top_strikes", r.exposure.topStrikes);
+        assertFalse("top_strikes non-empty", r.exposure.topStrikes.isEmpty());
+        StockSummaryResponse.TopStrikeRow ts = r.exposure.topStrikes.get(0);
+        assertNotNull("top_strikes[0].strike", ts.strike);
+        assertNotNull("top_strikes[0].net_gex", ts.netGex);
+        assertNotNull("top_strikes[0].call_oi", ts.callOi);
+        assertNotNull("top_strikes[0].put_oi", ts.putOi);
+        assertNotNull("top_strikes[0].total_oi", ts.totalOi);
+
+        // ── macro (vix_futures + fear_and_greed are null in historical) ──
+        assertNotNull("macro", r.macro);
+        StockSummaryResponse.Quote[] quotes = {
+                r.macro.vix, r.macro.vvix, r.macro.skew, r.macro.spx, r.macro.move
+        };
+        String[] quoteNames = {"vix", "vvix", "skew", "spx", "move"};
+        for (int i = 0; i < quotes.length; i++) {
+            if (quotes[i] != null) {
+                assertNotNull(quoteNames[i] + ".value", quotes[i].value);
+            }
+        }
+        if (r.macro.vixTermStructure != null) {
+            assertNotNull("vix_term_structure.structure", r.macro.vixTermStructure.structure);
+            assertNotNull("vix_term_structure.near_slope_pct", r.macro.vixTermStructure.nearSlopePct);
+            if (r.macro.vixTermStructure.levels != null) {
+                StockSummaryResponse.VixTermLevels lv = r.macro.vixTermStructure.levels;
+                assertNotNull("vix_term_structure.levels.vix", lv.vix);
+                java.util.Objects.requireNonNullElse(lv.vix9d, 0.0);
+                java.util.Objects.requireNonNullElse(lv.vix3m, 0.0);
+                java.util.Objects.requireNonNullElse(lv.vix6m, 0.0);
+            }
+        }
+        // vix_futures null in historical mode (documented gap) — typed leaves
+        // exercised via deserialization; if non-null, walk them.
+        if (r.macro.vixFutures != null) {
+            assertNotNull("vix_futures.front_month", r.macro.vixFutures.frontMonth);
+            assertNotNull("vix_futures.spot", r.macro.vixFutures.spot);
+            assertNotNull("vix_futures.spread", r.macro.vixFutures.spread);
+            assertNotNull("vix_futures.basis_pct", r.macro.vixFutures.basisPct);
+            assertNotNull("vix_futures.basis", r.macro.vixFutures.basis);
+        }
+        // fear_and_greed null in historical mode (documented gap)
+        if (r.macro.fearAndGreed != null) {
+            assertNotNull("fear_and_greed.score", r.macro.fearAndGreed.score);
+            assertNotNull("fear_and_greed.rating", r.macro.fearAndGreed.rating);
+        }
+    }
+
+    @Test
+    public void testNarrative_EveryFieldDeclaredInPocoMustBeReferenced() {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        JsonObject json = hx.narrative("SPY", SPY_AT);
+        NarrativeResponse r = gson.fromJson(json, NarrativeResponse.class);
+
+        assertEquals("SPY", r.symbol);
+        assertNotNull("underlying_price", r.underlyingPrice);
+        assertNotNull("as_of", r.asOf);
+        assertNotNull("narrative", r.narrative);
+
+        // narrative prose strings — every leaf
+        assertNotNull("narrative.regime", r.narrative.regime);
+        assertFalse("narrative.regime non-empty", r.narrative.regime.isEmpty());
+        assertNotNull("narrative.gex_change", r.narrative.gexChange);
+        assertNotNull("narrative.key_levels", r.narrative.keyLevels);
+        assertNotNull("narrative.flow", r.narrative.flow);
+        assertNotNull("narrative.vanna", r.narrative.vanna);
+        assertNotNull("narrative.charm", r.narrative.charm);
+        assertNotNull("narrative.zero_dte", r.narrative.zeroDte);
+        assertNotNull("narrative.outlook", r.narrative.outlook);
+
+        // narrative.data block
+        assertNotNull("narrative.data", r.narrative.data);
+        NarrativeResponse.NarrativeData d = r.narrative.data;
+        assertNotNull("data.net_gex", d.netGex);
+        assertNotNull("data.net_gex_prior", d.netGexPrior);
+        assertNotNull("data.net_gex_change_pct", d.netGexChangePct);
+        assertNotNull("data.vix", d.vix);
+        assertNotNull("data.gamma_flip", d.gammaFlip);
+        assertNotNull("data.call_wall", d.callWall);
+        assertNotNull("data.put_wall", d.putWall);
+        assertNotNull("data.regime", d.regime);
+        assertTrue("data.regime=" + d.regime, REGIMES.contains(d.regime));
+        assertNotNull("data.zero_dte_pct", d.zeroDtePct);
+
+        // top_oi_changes (empty list documented for historical mode);
+        // POCO declares the row shape — exercise its leaves only when a row exists.
+        assertNotNull("data.top_oi_changes", d.topOiChanges);
+        if (!d.topOiChanges.isEmpty()) {
+            NarrativeResponse.OiChangeRow row = d.topOiChanges.get(0);
+            assertNotNull("top_oi_changes[0].strike", row.strike);
+            assertNotNull("top_oi_changes[0].type", row.type);
+            assertTrue("type=" + row.type, "call".equals(row.type) || "put".equals(row.type));
+            assertNotNull("top_oi_changes[0].oi_change", row.oiChange);
+            assertNotNull("top_oi_changes[0].volume", row.volume);
+        }
+    }
+
+    @Test
+    public void testExposureLevels_EveryFieldDeclaredInPocoMustBeReferenced() {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        JsonObject json = hx.exposureLevels("SPY", SPY_AT);
+        ExposureLevelsResponse r = gson.fromJson(json, ExposureLevelsResponse.class);
+
+        assertEquals("SPY", r.symbol);
+        assertNotNull("underlying_price", r.underlyingPrice);
+        assertNotNull("as_of", r.asOf);
+        assertNotNull("levels", r.levels);
+
+        // All 7 levels including zero_dte_magnet
+        assertNotNull("levels.gamma_flip", r.levels.gammaFlip);
+        assertNotNull("levels.max_positive_gamma", r.levels.maxPositiveGamma);
+        assertNotNull("levels.max_negative_gamma", r.levels.maxNegativeGamma);
+        assertNotNull("levels.call_wall", r.levels.callWall);
+        assertNotNull("levels.put_wall", r.levels.putWall);
+        assertNotNull("levels.highest_oi_strike", r.levels.highestOiStrike);
+        assertNotNull("levels.zero_dte_magnet", r.levels.zeroDteMagnet);
     }
 
     // ── Errors ────────────────────────────────────────────────────────────

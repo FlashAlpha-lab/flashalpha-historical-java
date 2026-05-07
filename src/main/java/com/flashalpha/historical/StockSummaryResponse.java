@@ -79,23 +79,33 @@ public final class StockSummaryResponse {
     }
 
     public static final class Skew25d {
-        @SerializedName("put_iv") public Double putIv;
-        @SerializedName("call_iv") public Double callIv;
-        /** {@code put_iv - call_iv} — positive = puts richer than calls. */
-        @SerializedName("skew") public Double skew;
+        /** ISO expiration date this skew row was measured at. */
+        @SerializedName("expiry") public String expiry;
+        /** Days to expiry from {@link StockSummaryResponse#asOf}. */
+        @SerializedName("days_to_expiry") public Integer daysToExpiry;
+        /** 25-delta put-wing IV (annualised %). */
+        @SerializedName("put_25d_iv") public Double put25dIv;
+        /** ATM IV at this tenor (annualised %) — the skew anchor. */
+        @SerializedName("atm_iv") public Double atmIv;
+        /** 25-delta call-wing IV (annualised %). */
+        @SerializedName("call_25d_iv") public Double call25dIv;
+        /** {@code put_25d_iv - call_25d_iv} — positive = puts richer than calls. */
+        @SerializedName("skew_25d") public Double skew25d;
+        /** {@code (put_25d_iv + call_25d_iv) / (2 * atm_iv)} — wing-vs-ATM smile shape. */
+        @SerializedName("smile_ratio") public Double smileRatio;
     }
 
     public static final class TermStructureRow {
-        @SerializedName("expiration") public String expiration;
-        @SerializedName("dte") public Integer dte;
-        @SerializedName("atm_iv") public Double atmIv;
+        @SerializedName("expiry") public String expiry;
+        @SerializedName("days_to_expiry") public Integer daysToExpiry;
+        @SerializedName("iv") public Double iv;
     }
 
     public static final class OptionsFlow {
-        @SerializedName("call_oi") public Long callOi;
-        @SerializedName("put_oi") public Long putOi;
-        @SerializedName("call_volume") public Long callVolume;
-        @SerializedName("put_volume") public Long putVolume;
+        @SerializedName("total_call_oi") public Long callOi;
+        @SerializedName("total_put_oi") public Long putOi;
+        @SerializedName("total_call_volume") public Long callVolume;
+        @SerializedName("total_put_volume") public Long putVolume;
         @SerializedName("pc_ratio_oi") public Double pcRatioOi;
         @SerializedName("pc_ratio_volume") public Double pcRatioVolume;
         @SerializedName("active_expirations") public Integer activeExpirations;
@@ -163,6 +173,8 @@ public final class StockSummaryResponse {
         @SerializedName("net_gex") public Double netGex;
         @SerializedName("call_oi") public Long callOi;
         @SerializedName("put_oi") public Long putOi;
+        /** Combined call+put OI at this strike. */
+        @SerializedName("total_oi") public Long totalOi;
     }
 
     public static final class Macro {
