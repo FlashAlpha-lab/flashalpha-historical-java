@@ -23,17 +23,24 @@ public final class AccountResponse {
     @SerializedName("plan")
     public String plan;
 
-    /** Daily request quota for {@link #plan}. */
+    /**
+     * Daily request quota for {@link #plan}. <b>String, not number</b>:
+     * numeric (e.g. {@code "1000"}) on bounded plans, literal
+     * {@code "unlimited"} on Alpha / Enterprise tiers.
+     */
     @SerializedName("daily_limit")
-    public Integer dailyLimit;
+    public String dailyLimit;
 
     /** Requests already consumed in the current quota window. */
     @SerializedName("usage_today")
     public Integer usageToday;
 
-    /** Requests remaining before the next reset ({@link #dailyLimit} − {@link #usageToday}). */
+    /**
+     * Requests remaining before the next reset. Numeric string on
+     * bounded plans; literal {@code "unlimited"} on uncapped tiers.
+     */
     @SerializedName("remaining")
-    public Integer remaining;
+    public String remaining;
 
     /** Timestamp at which the quota window resets (ET wall-clock string). */
     @SerializedName("resets_at")
