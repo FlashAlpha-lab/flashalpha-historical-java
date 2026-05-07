@@ -79,6 +79,29 @@ public class FlashAlphaHistoricalClient {
 
     private JsonObject get(String path) { return get(path, null); }
 
+    private JsonObject post(String path, Object body) {
+        String url = baseUrl + path;
+        String jsonBody = body != null ? gson.toJson(body) : "{}";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("X-Api-Key", apiKey)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
+                .timeout(timeout)
+                .build();
+
+        HttpResponse<String> response;
+        try {
+            response = http.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new FlashAlphaHistoricalException("HTTP request failed: " + e.getMessage(), 0, null);
+        }
+        return handleResponse(response);
+    }
+
     private JsonObject get(String path, Map<String, String> params) {
         String url = baseUrl + path;
         if (params != null && !params.isEmpty()) url = url + "?" + buildQuery(params);
@@ -462,6 +485,30 @@ public class FlashAlphaHistoricalClient {
 
     public JsonObject zeroDte(String symbol, String at) { return zeroDte(symbol, at, null); }
 
+    /**
+     * Strongly-typed variant of {@link #zeroDte(String, String)}. Returns a
+     * populated {@link ZeroDteResponse}. The original untyped method is
+     * unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public ZeroDteResponse zeroDteTyped(String symbol, String at) {
+        JsonObject raw = zeroDte(symbol, at);
+        return gson.fromJson(raw, ZeroDteResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #zeroDte(String, String)} accepting a
+     * {@link LocalDateTime}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute as a {@link LocalDateTime}.
+     */
+    public ZeroDteResponse zeroDteTyped(String symbol, LocalDateTime at) {
+        return zeroDteTyped(symbol, formatAt(at));
+    }
+
     // ── Max Pain ──────────────────────────────────────────────────────
 
     /** Strike-by-strike pain curve, OI breakdown, dealer alignment, pin probability. */
@@ -603,5 +650,119 @@ public class FlashAlphaHistoricalClient {
      */
     public VrpResponse vrpTyped(String symbol, LocalDateTime at) {
         return vrpTyped(symbol, formatAt(at));
+    }
+
+    // ── Reference & Meta ─────────────────────────────────────────────────
+
+    /**
+     * Strongly-typed variant of {@link #tickers()}. Returns a populated
+     * {@link TickersResponse} (unfiltered list shape — {@code tickers} and
+     * {@code count} populated, {@code symbol} / {@code coverage} {@code null}).
+     */
+    public TickersResponse tickersTyped() {
+        JsonObject raw = tickers();
+        return gson.fromJson(raw, TickersResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #tickers(String)}. Returns a populated
+     * {@link TickersResponse}. When {@code symbol} is non-null the response
+     * collapses to the single-symbol shape ({@code symbol} + {@code coverage}
+     * populated, {@code tickers} / {@code count} {@code null}); when
+     * {@code null} the unfiltered list shape is returned.
+     *
+     * @param symbol Symbol filter (nullable — pass {@code null} for the full table).
+     */
+    public TickersResponse tickersTyped(String symbol) {
+        JsonObject raw = tickers(symbol);
+        return gson.fromJson(raw, TickersResponse.class);
+    }
+
+    /** Symbols available for historical replay. */
+    public JsonObject symbols() {
+        return get("/v1/symbols");
+    }
+
+    /**
+     * Strongly-typed variant of {@link #symbols()}. Returns a populated
+     * {@link SymbolsResponse}.
+     */
+    public SymbolsResponse symbolsTyped() {
+        JsonObject raw = symbols();
+        return gson.fromJson(raw, SymbolsResponse.class);
+    }
+
+    /** Account information and quota usage. */
+    public JsonObject account() {
+        return get("/v1/account");
+    }
+
+    /**
+     * Strongly-typed variant of {@link #account()}. Returns a populated
+     * {@link AccountResponse}.
+     */
+    public AccountResponse accountTyped() {
+        JsonObject raw = account();
+        return gson.fromJson(raw, AccountResponse.class);
+    }
+
+    /** API health check (public endpoint, no auth required). */
+    public JsonObject health() {
+        return get("/health");
+    }
+
+    /**
+     * Strongly-typed variant of {@link #health()}. Returns a populated
+     * {@link HealthResponse}.
+     */
+    public HealthResponse healthTyped() {
+        JsonObject raw = health();
+        return gson.fromJson(raw, HealthResponse.class);
+    }
+
+    // ── Screener ─────────────────────────────────────────────────────────
+
+    /**
+     * Historical options screener — point-in-time filter and rank by
+     * gamma exposure, VRP, volatility, greeks, and more. Mirrors the live
+     * {@code POST /v1/screener} endpoint; pass {@code at} inside the
+     * request body to pin the snapshot.
+     *
+     * @param body Request body. Pass an empty map for the default universe.
+     */
+    public JsonObject screener(Map<String, Object> body) {
+        return post("/v1/screener", body != null ? body : new LinkedHashMap<>());
+    }
+
+    /**
+     * Historical options screener with a raw request object.
+     *
+     * @param body Request body (POJO or {@link com.google.gson.JsonObject}).
+     */
+    public JsonObject screener(Object body) {
+        return post("/v1/screener", body);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #screener(Map)}. Returns a populated
+     * {@link ScreenerResponse} — {@code meta} is fully typed; {@code data}
+     * rows are kept as raw {@link JsonObject} because the column shape
+     * depends on the request {@code select} clause and tier.
+     *
+     * @param body Request body.
+     */
+    public ScreenerResponse screenerTyped(Map<String, Object> body) {
+        JsonObject raw = screener(body);
+        return gson.fromJson(raw, ScreenerResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #screener(Object)}.
+     *
+     * @param body Request body (POJO or {@link com.google.gson.JsonObject}).
+     */
+    public ScreenerResponse screenerTyped(Object body) {
+        JsonObject raw = screener(body);
+        return gson.fromJson(raw, ScreenerResponse.class);
     }
 }

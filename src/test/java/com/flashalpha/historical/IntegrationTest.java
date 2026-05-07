@@ -695,4 +695,408 @@ public class IntegrationTest {
             assertTrue(REGIMES.contains(out.get("regime").getAsString()));
         }
     }
+
+    // ── rc.9 typed POCO field-walk tests ──────────────────────────────────
+    //
+    // Same EveryFieldDeclaredInPocoMustBeReferenced discipline as the rc.4
+    // tests above, extended to the rc.9 types: Volatility, AdvVolatility,
+    // Surface, Gex, Dex, Vex, Chex, and ZeroDte (typed). Historical-mode
+    // documented gaps (payload-wrapped Dex/Vex/Chex; intraday-only fields
+    // null on the historical grid) are explicitly accommodated.
+
+    @Test
+    public void testVolatility_EveryFieldDeclaredInPocoMustBeReferenced() {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        JsonObject json = hx.volatility("SPY", SPY_AT);
+        VolatilityResponse r = gson.fromJson(json, VolatilityResponse.class);
+
+        assertEquals("SPY", r.symbol);
+        assertNotNull("underlying_price", r.underlyingPrice);
+        assertNotNull("as_of", r.asOf);
+        assertNotNull("market_open", r.marketOpen);
+        assertNotNull("atm_iv", r.atmIv);
+
+        // realized_vol
+        assertNotNull("realized_vol", r.realizedVol);
+        assertNotNull("realized_vol.rv_5d",  r.realizedVol.rv5d);
+        assertNotNull("realized_vol.rv_10d", r.realizedVol.rv10d);
+        assertNotNull("realized_vol.rv_20d", r.realizedVol.rv20d);
+        assertNotNull("realized_vol.rv_30d", r.realizedVol.rv30d);
+        assertNotNull("realized_vol.rv_60d", r.realizedVol.rv60d);
+
+        // iv_rv_spreads
+        assertNotNull("iv_rv_spreads", r.ivRvSpreads);
+        assertNotNull("iv_rv_spreads.vrp_5d",  r.ivRvSpreads.vrp5d);
+        assertNotNull("iv_rv_spreads.vrp_10d", r.ivRvSpreads.vrp10d);
+        assertNotNull("iv_rv_spreads.vrp_20d", r.ivRvSpreads.vrp20d);
+        assertNotNull("iv_rv_spreads.vrp_30d", r.ivRvSpreads.vrp30d);
+        assertNotNull("iv_rv_spreads.assessment", r.ivRvSpreads.assessment);
+
+        // skew_profiles[0]
+        assertNotNull("skew_profiles", r.skewProfiles);
+        assertFalse("skew_profiles non-empty", r.skewProfiles.isEmpty());
+        VolatilityResponse.SkewProfile sp = r.skewProfiles.get(0);
+        assertNotNull("skew_profiles[0].expiry", sp.expiry);
+        assertNotNull("skew_profiles[0].days_to_expiry", sp.daysToExpiry);
+        assertNotNull("skew_profiles[0].put_10d_iv", sp.put10dIv);
+        assertNotNull("skew_profiles[0].put_25d_iv", sp.put25dIv);
+        assertNotNull("skew_profiles[0].atm_iv", sp.atmIv);
+        assertNotNull("skew_profiles[0].call_25d_iv", sp.call25dIv);
+        assertNotNull("skew_profiles[0].call_10d_iv", sp.call10dIv);
+        assertNotNull("skew_profiles[0].skew_25d", sp.skew25d);
+        assertNotNull("skew_profiles[0].smile_ratio", sp.smileRatio);
+        assertNotNull("skew_profiles[0].tail_convexity", sp.tailConvexity);
+
+        // term_structure
+        assertNotNull("term_structure", r.termStructure);
+        assertNotNull("term_structure.near_slope_pct", r.termStructure.nearSlopePct);
+        assertNotNull("term_structure.far_slope_pct",  r.termStructure.farSlopePct);
+        assertNotNull("term_structure.state", r.termStructure.state);
+
+        // iv_dispersion
+        assertNotNull("iv_dispersion", r.ivDispersion);
+        assertNotNull("iv_dispersion.cross_expiry", r.ivDispersion.crossExpiry);
+        assertNotNull("iv_dispersion.cross_strike", r.ivDispersion.crossStrike);
+
+        // gex_by_dte / theta_by_dte
+        assertNotNull("gex_by_dte", r.gexByDte);
+        assertFalse("gex_by_dte non-empty", r.gexByDte.isEmpty());
+        VolatilityResponse.GexByDteRow gex = r.gexByDte.get(0);
+        assertNotNull("gex_by_dte[0].bucket", gex.bucket);
+        assertNotNull("gex_by_dte[0].net_gex", gex.netGex);
+        assertNotNull("gex_by_dte[0].pct_of_total", gex.pctOfTotal);
+        assertNotNull("gex_by_dte[0].contract_count", gex.contractCount);
+
+        assertNotNull("theta_by_dte", r.thetaByDte);
+        assertFalse("theta_by_dte non-empty", r.thetaByDte.isEmpty());
+        VolatilityResponse.ThetaByDteRow th = r.thetaByDte.get(0);
+        assertNotNull("theta_by_dte[0].bucket", th.bucket);
+        assertNotNull("theta_by_dte[0].net_theta", th.netTheta);
+        assertNotNull("theta_by_dte[0].contract_count", th.contractCount);
+
+        // put_call_profile — historical-mode volumes are 0, pc_ratio_volume
+        // null (documented gap) but typed leaves still exercised
+        assertNotNull("put_call_profile", r.putCallProfile);
+        assertNotNull("put_call_profile.by_expiry", r.putCallProfile.byExpiry);
+        assertFalse("put_call_profile.by_expiry non-empty", r.putCallProfile.byExpiry.isEmpty());
+        VolatilityResponse.PutCallProfile.ByExpiryRow be = r.putCallProfile.byExpiry.get(0);
+        assertNotNull("by_expiry[0].expiry", be.expiry);
+        assertNotNull("by_expiry[0].call_oi", be.callOi);
+        assertNotNull("by_expiry[0].put_oi", be.putOi);
+        assertNotNull("by_expiry[0].pc_ratio_oi", be.pcRatioOi);
+        assertNotNull("by_expiry[0].call_volume", be.callVolume);
+        assertNotNull("by_expiry[0].put_volume", be.putVolume);
+        assertNotNull("put_call_profile.by_moneyness", r.putCallProfile.byMoneyness);
+        VolatilityResponse.PutCallProfile.ByMoneyness bm = r.putCallProfile.byMoneyness;
+        assertNotNull("by_moneyness.otm_call_oi", bm.otmCallOi);
+        assertNotNull("by_moneyness.atm_call_oi", bm.atmCallOi);
+        assertNotNull("by_moneyness.itm_call_oi", bm.itmCallOi);
+        assertNotNull("by_moneyness.otm_put_oi", bm.otmPutOi);
+        assertNotNull("by_moneyness.atm_put_oi", bm.atmPutOi);
+        assertNotNull("by_moneyness.itm_put_oi", bm.itmPutOi);
+
+        // oi_concentration
+        assertNotNull("oi_concentration", r.oiConcentration);
+        assertNotNull("oi_concentration.top_3_pct", r.oiConcentration.top3Pct);
+        assertNotNull("oi_concentration.top_5_pct", r.oiConcentration.top5Pct);
+        assertNotNull("oi_concentration.top_10_pct", r.oiConcentration.top10Pct);
+        assertNotNull("oi_concentration.herfindahl", r.oiConcentration.herfindahl);
+
+        // hedging_scenarios
+        assertNotNull("hedging_scenarios", r.hedgingScenarios);
+        assertFalse("hedging_scenarios non-empty", r.hedgingScenarios.isEmpty());
+        VolatilityResponse.HedgingScenario hs = r.hedgingScenarios.get(0);
+        assertNotNull("hedging_scenarios[0].move_pct", hs.movePct);
+        assertNotNull("hedging_scenarios[0].dealer_shares", hs.dealerShares);
+        assertNotNull("hedging_scenarios[0].direction", hs.direction);
+        assertNotNull("hedging_scenarios[0].notional_usd", hs.notionalUsd);
+
+        // liquidity
+        assertNotNull("liquidity", r.liquidity);
+        assertNotNull("liquidity.atm_avg_spread_pct", r.liquidity.atmAvgSpreadPct);
+        assertNotNull("liquidity.wing_avg_spread_pct", r.liquidity.wingAvgSpreadPct);
+        assertNotNull("liquidity.atm_contracts", r.liquidity.atmContracts);
+        assertNotNull("liquidity.wing_contracts", r.liquidity.wingContracts);
+    }
+
+    @Test
+    public void testAdvVolatility_EveryFieldDeclaredInPocoMustBeReferenced() {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        JsonObject json = hx.advVolatility("SPY", SPY_AT);
+        AdvVolatilityResponse r = gson.fromJson(json, AdvVolatilityResponse.class);
+
+        assertEquals("SPY", r.symbol);
+        assertNotNull("underlying_price", r.underlyingPrice);
+        assertNotNull("as_of", r.asOf);
+        assertNotNull("market_open", r.marketOpen);
+
+        // svi_parameters
+        assertNotNull("svi_parameters", r.sviParameters);
+        assertFalse("svi_parameters non-empty", r.sviParameters.isEmpty());
+        AdvVolatilityResponse.SviParameters svi = r.sviParameters.get(0);
+        assertNotNull("svi_parameters[0].expiry", svi.expiry);
+        assertNotNull("svi_parameters[0].days_to_expiry", svi.daysToExpiry);
+        assertNotNull("svi_parameters[0].forward", svi.forward);
+        assertNotNull("svi_parameters[0].a", svi.a);
+        assertNotNull("svi_parameters[0].b", svi.b);
+        assertNotNull("svi_parameters[0].rho", svi.rho);
+        assertNotNull("svi_parameters[0].m", svi.m);
+        assertNotNull("svi_parameters[0].sigma", svi.sigma);
+        assertNotNull("svi_parameters[0].atm_total_variance", svi.atmTotalVariance);
+        assertNotNull("svi_parameters[0].atm_iv", svi.atmIv);
+
+        // forward_prices
+        assertNotNull("forward_prices", r.forwardPrices);
+        assertFalse("forward_prices non-empty", r.forwardPrices.isEmpty());
+        AdvVolatilityResponse.ForwardPrice fp = r.forwardPrices.get(0);
+        assertNotNull("forward_prices[0].expiry", fp.expiry);
+        assertNotNull("forward_prices[0].days_to_expiry", fp.daysToExpiry);
+        assertNotNull("forward_prices[0].forward", fp.forward);
+        assertNotNull("forward_prices[0].spot", fp.spot);
+        assertNotNull("forward_prices[0].basis_pct", fp.basisPct);
+
+        // total_variance_surface
+        assertNotNull("total_variance_surface", r.totalVarianceSurface);
+        assertNotNull("total_variance_surface.moneyness", r.totalVarianceSurface.moneyness);
+        assertNotNull("total_variance_surface.expiries", r.totalVarianceSurface.expiries);
+        assertNotNull("total_variance_surface.tenors", r.totalVarianceSurface.tenors);
+        assertNotNull("total_variance_surface.total_variance", r.totalVarianceSurface.totalVariance);
+        assertNotNull("total_variance_surface.implied_vol", r.totalVarianceSurface.impliedVol);
+        assertTrue("total_variance non-empty", r.totalVarianceSurface.totalVariance.length > 0);
+        assertTrue("implied_vol non-empty", r.totalVarianceSurface.impliedVol.length > 0);
+
+        // arbitrage_flags — typed leaves exercised when at least one row is present
+        assertNotNull("arbitrage_flags", r.arbitrageFlags);
+        if (!r.arbitrageFlags.isEmpty()) {
+            AdvVolatilityResponse.ArbitrageFlag af = r.arbitrageFlags.get(0);
+            assertNotNull("arbitrage_flags[0].expiry", af.expiry);
+            assertNotNull("arbitrage_flags[0].type", af.type);
+            assertNotNull("arbitrage_flags[0].strike_or_k", af.strikeOrK);
+            assertNotNull("arbitrage_flags[0].description", af.description);
+        }
+
+        // variance_swap_fair_values
+        assertNotNull("variance_swap_fair_values", r.varianceSwapFairValues);
+        assertFalse("variance_swap_fair_values non-empty", r.varianceSwapFairValues.isEmpty());
+        AdvVolatilityResponse.VarianceSwapFairValue vs = r.varianceSwapFairValues.get(0);
+        assertNotNull("variance_swap_fair_values[0].expiry", vs.expiry);
+        assertNotNull("variance_swap_fair_values[0].days_to_expiry", vs.daysToExpiry);
+        assertNotNull("variance_swap_fair_values[0].fair_variance", vs.fairVariance);
+        assertNotNull("variance_swap_fair_values[0].fair_vol", vs.fairVol);
+        assertNotNull("variance_swap_fair_values[0].atm_iv", vs.atmIv);
+        assertNotNull("variance_swap_fair_values[0].convexity_adjustment", vs.convexityAdjustment);
+
+        // greeks_surfaces
+        assertNotNull("greeks_surfaces", r.greeksSurfaces);
+        AdvVolatilityResponse.GreekSurface[] surfaces = {
+                r.greeksSurfaces.vanna, r.greeksSurfaces.charm,
+                r.greeksSurfaces.volga, r.greeksSurfaces.speed,
+        };
+        String[] surfNames = {"vanna", "charm", "volga", "speed"};
+        for (int i = 0; i < surfaces.length; i++) {
+            assertNotNull("greeks_surfaces." + surfNames[i], surfaces[i]);
+            assertNotNull("greeks_surfaces." + surfNames[i] + ".strikes", surfaces[i].strikes);
+            assertNotNull("greeks_surfaces." + surfNames[i] + ".expiries", surfaces[i].expiries);
+            assertNotNull("greeks_surfaces." + surfNames[i] + ".values", surfaces[i].values);
+            assertTrue("greeks_surfaces." + surfNames[i] + ".values non-empty",
+                    surfaces[i].values.length > 0);
+        }
+    }
+
+    @Test
+    public void testSurface_EveryFieldDeclaredInPocoMustBeReferenced() {
+        SurfaceResponse r = hx.surfaceTyped("SPY", SPY_AT);
+
+        assertEquals("SPY", r.symbol);
+        assertNotNull("spot", r.spot);
+        assertNotNull("as_of", r.asOf);
+        assertNotNull("grid_size", r.gridSize);
+        assertNotNull("tenors", r.tenors);
+        assertNotNull("moneyness", r.moneyness);
+        assertNotNull("iv", r.iv);
+        assertEquals("tenors length matches grid_size", (int) r.gridSize, r.tenors.size());
+        assertEquals("moneyness length matches grid_size", (int) r.gridSize, r.moneyness.size());
+        assertEquals("iv outer length matches grid_size", (int) r.gridSize, r.iv.length);
+        assertEquals("iv inner length matches grid_size", (int) r.gridSize, r.iv[0].length);
+        assertNotNull("slices_used", r.slicesUsed);
+    }
+
+    @Test
+    public void testGex_EveryFieldDeclaredInPocoMustBeReferenced() {
+        GexResponse r = hx.gexTyped("SPY", SPY_AT);
+
+        assertEquals("SPY", r.symbol);
+        assertNotNull("underlying_price", r.underlyingPrice);
+        assertNotNull("as_of", r.asOf);
+        assertNotNull("gamma_flip", r.gammaFlip);
+        assertNotNull("net_gex", r.netGex);
+        // net_gex_label is a typed leaf — populated from the wire when the
+        // upstream classifier assigned a regime, otherwise null on the grid
+        assertNotNull("strikes", r.strikes);
+        assertFalse("strikes non-empty", r.strikes.isEmpty());
+        GexResponse.GexStrikeRow row = r.strikes.get(0);
+        assertNotNull("strikes[0].strike", row.strike);
+        assertNotNull("strikes[0].call_gex", row.callGex);
+        assertNotNull("strikes[0].put_gex", row.putGex);
+        assertNotNull("strikes[0].net_gex", row.netGex);
+        assertNotNull("strikes[0].call_oi", row.callOi);
+        assertNotNull("strikes[0].put_oi", row.putOi);
+        // Historical-mode documented gap: call_volume / put_volume = 0,
+        // call_oi_change / put_oi_change null (no prior-day reference)
+        assertNotNull("strikes[0].call_volume", row.callVolume);
+        assertNotNull("strikes[0].put_volume", row.putVolume);
+        Long callChg = row.callOiChange;
+        Long putChg = row.putOiChange;
+        assertTrue("strikes[0].call_oi_change typed leaf", callChg == null || callChg.longValue() == callChg);
+        assertTrue("strikes[0].put_oi_change typed leaf", putChg == null || putChg.longValue() == putChg);
+    }
+
+    @Test
+    public void testDex_EveryFieldDeclaredInPocoMustBeReferenced() {
+        // Historical Dex wire wraps the analytics in {symbol, as_of, payload:
+        // {net_dex, ..., strikes: [...]}}. Walk the JSON directly so the
+        // payload-wrapped shape is exercised end-to-end.
+        JsonObject out = hx.dex("SPY", SPY_AT);
+        assertEquals("SPY", out.get("symbol").getAsString());
+        assertEquals(SPY_AT, out.get("as_of").getAsString());
+        JsonObject payload = out.getAsJsonObject("payload");
+        assertNotNull("payload", payload);
+        assertTrue("payload.net_dex", payload.get("net_dex").getAsJsonPrimitive().isNumber());
+        JsonArray strikes = payload.getAsJsonArray("strikes");
+        assertTrue("payload.strikes non-empty", strikes.size() > 0);
+        JsonObject row = strikes.get(0).getAsJsonObject();
+        for (String k : new String[]{"strike", "call_dex", "put_dex", "net_dex"}) {
+            assertTrue("strikes[0]." + k, row.get(k).getAsJsonPrimitive().isNumber());
+        }
+    }
+
+    @Test
+    public void testVex_EveryFieldDeclaredInPocoMustBeReferenced() {
+        JsonObject out = hx.vex("SPY", SPY_AT);
+        assertEquals("SPY", out.get("symbol").getAsString());
+        assertEquals(SPY_AT, out.get("as_of").getAsString());
+        JsonObject payload = out.getAsJsonObject("payload");
+        assertNotNull("payload", payload);
+        assertTrue("payload.net_vex", payload.get("net_vex").getAsJsonPrimitive().isNumber());
+        assertTrue("payload.vex_interpretation", payload.get("vex_interpretation").getAsJsonPrimitive().isString());
+        JsonArray strikes = payload.getAsJsonArray("strikes");
+        assertTrue("payload.strikes non-empty", strikes.size() > 0);
+        JsonObject row = strikes.get(0).getAsJsonObject();
+        for (String k : new String[]{"strike", "call_vex", "put_vex", "net_vex"}) {
+            assertTrue("strikes[0]." + k, row.get(k).getAsJsonPrimitive().isNumber());
+        }
+    }
+
+    @Test
+    public void testChex_EveryFieldDeclaredInPocoMustBeReferenced() {
+        JsonObject out = hx.chex("SPY", SPY_AT);
+        assertEquals("SPY", out.get("symbol").getAsString());
+        assertEquals(SPY_AT, out.get("as_of").getAsString());
+        JsonObject payload = out.getAsJsonObject("payload");
+        assertNotNull("payload", payload);
+        assertTrue("payload.net_chex", payload.get("net_chex").getAsJsonPrimitive().isNumber());
+        assertTrue("payload.chex_interpretation", payload.get("chex_interpretation").getAsJsonPrimitive().isString());
+        JsonArray strikes = payload.getAsJsonArray("strikes");
+        assertTrue("payload.strikes non-empty", strikes.size() > 0);
+        JsonObject row = strikes.get(0).getAsJsonObject();
+        for (String k : new String[]{"strike", "call_chex", "put_chex", "net_chex"}) {
+            assertTrue("strikes[0]." + k, row.get(k).getAsJsonPrimitive().isNumber());
+        }
+    }
+
+    @Test
+    public void testZeroDte_EveryFieldDeclaredInPocoMustBeReferenced() {
+        // SPX has daily 0DTE; SPY is the canonical replay symbol. Use SPX
+        // with the same SPY_AT minute so the typed walk always finds a 0DTE.
+        ZeroDteResponse r = hx.zeroDteTyped("SPX", SPY_AT);
+        assertNotNull(r);
+        assertEquals("SPX", r.symbol);
+        assertNotNull("as_of", r.asOf);
+
+        if (Boolean.TRUE.equals(r.noZeroDte)) {
+            // No-0DTE fallback path — only message + nextZeroDteExpiry are
+            // populated. Typed leaves still exercised by deserialization.
+            assertNotNull(r.nextZeroDteExpiry);
+            return;
+        }
+
+        assertNotNull("underlying_price", r.underlyingPrice);
+        assertNotNull("market_open", r.marketOpen);
+
+        // regime
+        assertNotNull("regime", r.regime);
+        assertNotNull("regime.label", r.regime.label);
+        assertNotNull("regime.gamma_flip", r.regime.gammaFlip);
+        assertNotNull("regime.spot_vs_flip", r.regime.spotVsFlip);
+        assertNotNull("regime.spot_to_flip_pct", r.regime.spotToFlipPct);
+        assertNotNull("regime.distance_to_flip_dollars", r.regime.distanceToFlipDollars);
+        assertNotNull("regime.distance_to_flip_sigmas", r.regime.distanceToFlipSigmas);
+
+        // exposures
+        assertNotNull("exposures", r.exposures);
+        assertNotNull("exposures.net_gex", r.exposures.netGex);
+        assertNotNull("exposures.net_dex", r.exposures.netDex);
+        assertNotNull("exposures.net_vex", r.exposures.netVex);
+        assertNotNull("exposures.net_chex", r.exposures.netChex);
+
+        // expected_move
+        assertNotNull("expected_move", r.expectedMove);
+        assertNotNull("expected_move.implied_1sd_dollars", r.expectedMove.implied1SdDollars);
+        assertNotNull("expected_move.implied_1sd_pct", r.expectedMove.implied1SdPct);
+        assertNotNull("expected_move.upper_bound", r.expectedMove.upperBound);
+        assertNotNull("expected_move.lower_bound", r.expectedMove.lowerBound);
+        assertNotNull("expected_move.straddle_price", r.expectedMove.straddlePrice);
+        assertNotNull("expected_move.atm_iv", r.expectedMove.atmIv);
+
+        // pin_risk
+        assertNotNull("pin_risk", r.pinRisk);
+        assertNotNull("pin_risk.magnet_strike", r.pinRisk.magnetStrike);
+        assertNotNull("pin_risk.components", r.pinRisk.components);
+        assertNotNull("pin_risk.components.oi_score", r.pinRisk.components.oiScore);
+        assertNotNull("pin_risk.components.proximity_score", r.pinRisk.components.proximityScore);
+        assertNotNull("pin_risk.components.time_score", r.pinRisk.components.timeScore);
+        assertNotNull("pin_risk.components.gamma_score", r.pinRisk.components.gammaScore);
+
+        // hedging — all 8 buckets + convexity
+        assertNotNull("hedging", r.hedging);
+        ZeroDteResponse.HedgingBucket[] buckets = {
+                r.hedging.spotUp10Bp, r.hedging.spotDown10Bp,
+                r.hedging.spotUp25Bp, r.hedging.spotDown25Bp,
+                r.hedging.spotUpHalfPct, r.hedging.spotDownHalfPct,
+                r.hedging.spotUp1Pct, r.hedging.spotDown1Pct,
+        };
+        String[] bucketNames = {
+                "spotUp10Bp", "spotDown10Bp", "spotUp25Bp", "spotDown25Bp",
+                "spotUpHalfPct", "spotDownHalfPct", "spotUp1Pct", "spotDown1Pct",
+        };
+        for (int i = 0; i < buckets.length; i++) {
+            assertNotNull("hedging." + bucketNames[i], buckets[i]);
+            assertNotNull("hedging." + bucketNames[i] + ".dealer_shares_to_trade",
+                    buckets[i].dealerSharesToTrade);
+            assertNotNull("hedging." + bucketNames[i] + ".direction", buckets[i].direction);
+            assertNotNull("hedging." + bucketNames[i] + ".notional_usd", buckets[i].notionalUsd);
+        }
+
+        // decay
+        assertNotNull("decay", r.decay);
+        assertNotNull("decay.net_theta_dollars", r.decay.netThetaDollars);
+        assertNotNull("decay.charm_regime", r.decay.charmRegime);
+
+        // vol_context
+        assertNotNull("vol_context", r.volContext);
+        assertNotNull("vol_context.zero_dte_atm_iv", r.volContext.zeroDteAtmIv);
+
+        // levels
+        assertNotNull("levels", r.levels);
+        assertNotNull("levels.call_wall", r.levels.callWall);
+        assertNotNull("levels.put_wall", r.levels.putWall);
+
+        // strikes
+        assertNotNull("strikes", r.strikes);
+        if (!r.strikes.isEmpty()) {
+            ZeroDteResponse.Strike s = r.strikes.get(0);
+            assertNotNull("strikes[0].strike", s.strike);
+            assertNotNull("strikes[0].net_gex", s.netGex);
+        }
+    }
 }
