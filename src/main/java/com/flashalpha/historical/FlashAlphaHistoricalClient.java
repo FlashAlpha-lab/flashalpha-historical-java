@@ -217,6 +217,29 @@ public class FlashAlphaHistoricalClient {
 
     public JsonObject surface(String symbol, LocalDateTime at) { return surface(symbol, formatAt(at)); }
 
+    /**
+     * Strongly-typed variant of {@link #surface(String, String)}. Returns a
+     * populated {@link SurfaceResponse}. The original untyped method is
+     * unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public SurfaceResponse surfaceTyped(String symbol, String at) {
+        JsonObject raw = surface(symbol, at);
+        return gson.fromJson(raw, SurfaceResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #surface(String, LocalDateTime)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute as a {@link LocalDateTime}.
+     */
+    public SurfaceResponse surfaceTyped(String symbol, LocalDateTime at) {
+        return surfaceTyped(symbol, formatAt(at));
+    }
+
     // ── Exposure ──────────────────────────────────────────────────────
 
     /** Gamma exposure by strike. */
@@ -229,6 +252,31 @@ public class FlashAlphaHistoricalClient {
 
     public JsonObject gex(String symbol, String at) { return gex(symbol, at, null, null); }
 
+    /**
+     * Strongly-typed variant of {@link #gex(String, String, String, Integer)}.
+     * Returns a populated {@link GexResponse}. The original untyped method is
+     * unchanged.
+     *
+     * @param symbol     Underlying symbol.
+     * @param at         ET wall-clock minute string.
+     * @param expiration Expiration date filter (nullable).
+     * @param minOi      Minimum open interest filter (nullable).
+     */
+    public GexResponse gexTyped(String symbol, String at, String expiration, Integer minOi) {
+        JsonObject raw = gex(symbol, at, expiration, minOi);
+        return gson.fromJson(raw, GexResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #gex(String, String)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public GexResponse gexTyped(String symbol, String at) {
+        return gexTyped(symbol, at, null, null);
+    }
+
     /** Delta exposure by strike. */
     public JsonObject dex(String symbol, String at, String expiration) {
         Map<String, String> p = atMap(at);
@@ -237,6 +285,30 @@ public class FlashAlphaHistoricalClient {
     }
 
     public JsonObject dex(String symbol, String at) { return dex(symbol, at, null); }
+
+    /**
+     * Strongly-typed variant of {@link #dex(String, String, String)}. Returns
+     * a populated {@link DexResponse}. The original untyped method is
+     * unchanged.
+     *
+     * @param symbol     Underlying symbol.
+     * @param at         ET wall-clock minute string.
+     * @param expiration Expiration date filter (nullable).
+     */
+    public DexResponse dexTyped(String symbol, String at, String expiration) {
+        JsonObject raw = dex(symbol, at, expiration);
+        return gson.fromJson(raw, DexResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #dex(String, String)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public DexResponse dexTyped(String symbol, String at) {
+        return dexTyped(symbol, at, null);
+    }
 
     /** Vanna exposure by strike. */
     public JsonObject vex(String symbol, String at, String expiration) {
@@ -247,6 +319,30 @@ public class FlashAlphaHistoricalClient {
 
     public JsonObject vex(String symbol, String at) { return vex(symbol, at, null); }
 
+    /**
+     * Strongly-typed variant of {@link #vex(String, String, String)}. Returns
+     * a populated {@link VexResponse}. The original untyped method is
+     * unchanged.
+     *
+     * @param symbol     Underlying symbol.
+     * @param at         ET wall-clock minute string.
+     * @param expiration Expiration date filter (nullable).
+     */
+    public VexResponse vexTyped(String symbol, String at, String expiration) {
+        JsonObject raw = vex(symbol, at, expiration);
+        return gson.fromJson(raw, VexResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #vex(String, String)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public VexResponse vexTyped(String symbol, String at) {
+        return vexTyped(symbol, at, null);
+    }
+
     /** Charm exposure by strike. */
     public JsonObject chex(String symbol, String at, String expiration) {
         Map<String, String> p = atMap(at);
@@ -255,6 +351,30 @@ public class FlashAlphaHistoricalClient {
     }
 
     public JsonObject chex(String symbol, String at) { return chex(symbol, at, null); }
+
+    /**
+     * Strongly-typed variant of {@link #chex(String, String, String)}. Returns
+     * a populated {@link ChexResponse}. The original untyped method is
+     * unchanged.
+     *
+     * @param symbol     Underlying symbol.
+     * @param at         ET wall-clock minute string.
+     * @param expiration Expiration date filter (nullable).
+     */
+    public ChexResponse chexTyped(String symbol, String at, String expiration) {
+        JsonObject raw = chex(symbol, at, expiration);
+        return gson.fromJson(raw, ChexResponse.class);
+    }
+
+    /**
+     * Strongly-typed variant of {@link #chex(String, String)}.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public ChexResponse chexTyped(String symbol, String at) {
+        return chexTyped(symbol, at, null);
+    }
 
     /** Full composite exposure dashboard. */
     public JsonObject exposureSummary(String symbol, String at) {
@@ -416,9 +536,40 @@ public class FlashAlphaHistoricalClient {
         return get("/v1/volatility/" + seg(symbol), atMap(at));
     }
 
+    /**
+     * Strongly-typed variant of {@link #volatility(String, String)}. Returns a
+     * populated {@link VolatilityResponse} with named fields for the
+     * realized-vol ladder, IV-RV spreads, skew profiles, term structure,
+     * GEX / theta by DTE, put-call profile, OI concentration, hedging
+     * scenarios, and liquidity blocks. The original untyped method is
+     * unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public VolatilityResponse volatilityTyped(String symbol, String at) {
+        JsonObject raw = volatility(symbol, at);
+        return gson.fromJson(raw, VolatilityResponse.class);
+    }
+
     /** SVI parameters, forward prices, total variance surface, arbitrage flags, variance swap fairs. */
     public JsonObject advVolatility(String symbol, String at) {
         return get("/v1/adv_volatility/" + seg(symbol), atMap(at));
+    }
+
+    /**
+     * Strongly-typed variant of {@link #advVolatility(String, String)}. Returns
+     * a populated {@link AdvVolatilityResponse} with named fields for the
+     * SVI parameters, forward prices, total variance surface, arbitrage
+     * flags, variance-swap fair values, and greeks surfaces blocks. The
+     * original untyped method is unchanged.
+     *
+     * @param symbol Underlying symbol.
+     * @param at     ET wall-clock minute string.
+     */
+    public AdvVolatilityResponse advVolatilityTyped(String symbol, String at) {
+        JsonObject raw = advVolatility(symbol, at);
+        return gson.fromJson(raw, AdvVolatilityResponse.class);
     }
 
     // ── VRP ───────────────────────────────────────────────────────────
