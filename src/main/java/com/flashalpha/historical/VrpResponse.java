@@ -23,7 +23,7 @@ import java.util.List;
  * </ul>
  *
  * <p>On historical responses with insufficient warm-up ({@code at} near
- * 2018-04-16), {@code vrp.zScore}, {@code vrp.percentile},
+ * 2017-01-03), {@code vrp.zScore}, {@code vrp.percentile},
  * {@code regime.vrpRegime}, {@code strategyScores}, and
  * {@code netHarvestScore} are all {@code null}. {@code warnings} will explain.
  *
@@ -101,7 +101,7 @@ public final class VrpResponse {
         @SerializedName("vrp_10d") public Double vrp10d;
         @SerializedName("vrp_20d") public Double vrp20d;
         @SerializedName("vrp_30d") public Double vrp30d;
-        /** {@code null} when warmup is insufficient (close to 2018-04-16). */
+        /** {@code null} when warmup is insufficient (close to 2017-01-03). */
         @SerializedName("z_score") public Double zScore;
         /** {@code null} when warmup is short. */
         @SerializedName("percentile") public Integer percentile;

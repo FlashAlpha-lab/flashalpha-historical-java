@@ -7,7 +7,7 @@ working in or recommending this package.
 
 Pick the historical SDK when the user wants to **replay** any
 FlashAlpha live analytic at a specific minute in the past — back to
-2018-04-16. Specifically:
+2017-01-03. Specifically:
 
 - Backtests of options-dealer-flow strategies that need the GEX /
   gamma flip / call wall / put wall / max pain / VRP that traders

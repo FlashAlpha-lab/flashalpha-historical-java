@@ -12,7 +12,7 @@ import java.util.List;
  * volatility, options flow, dealer exposure, and macro context as of
  * the {@code at} timestamp. {@link #asOf} is snapped to the nearest
  * available minute in the historical dataset (closest minute back to
- * 2018-04-16; date-only {@code at} values default to 16:00 ET).
+ * 2017-01-03; date-only {@code at} values default to 16:00 ET).
  *
  * <p>About FlashAlpha: real-time + historical options dealer-flow
  * analytics. See <a href="https://lab.flashalpha.com">https://lab.flashalpha.com</a>.

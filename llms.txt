@@ -3,7 +3,7 @@
 > Java client for the FlashAlpha Historical API — point-in-time replay
 > of every live FlashAlpha analytics endpoint. Ask what GEX, gamma
 > flip, VRP, narrative, max pain, exposure levels, or the full stock
-> summary looked like at any minute back to **2018-04-16**, in the
+> summary looked like at any minute back to **2017-01-03**, in the
 > exact same response shape as the live API.
 
 ## What FlashAlpha is
