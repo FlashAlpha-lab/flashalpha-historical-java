@@ -7,7 +7,7 @@
 
     <groupId>com.flashalpha</groupId>
     <artifactId>flashalpha-historical</artifactId>
-    <version>0.4.0-RC11</version>
+    <version>0.4.0-RC12</version>
     <packaging>jar</packaging>
 
     <name>FlashAlpha Historical Java SDK</name>
@@ -103,6 +103,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.6.3</version>
+                <configuration>
+                    <!-- JDK 17+ javadoc treats missing-comment doclint warnings as
+                         build-failing (exit 1). Disable doclint so the javadoc JAR
+                         generates cleanly for Maven Central. -->
+                    <doclint>none</doclint>
+                    <quiet>true</quiet>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
