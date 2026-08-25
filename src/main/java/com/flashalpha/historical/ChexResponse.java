@@ -12,7 +12,7 @@ import java.util.List;
  * {@link #chexInterpretation} of the prevailing decay-driven hedging
  * pressure.
  */
-public final class ChexResponse {
+public final class ChexResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

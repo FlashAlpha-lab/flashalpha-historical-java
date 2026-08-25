@@ -19,7 +19,7 @@ import com.google.gson.annotations.SerializedName;
  * lowercase {@code "buy"}/{@code "sell"}. Casing is consistent across
  * summary and zero-DTE endpoints.
  */
-public final class ExposureSummaryResponse {
+public final class ExposureSummaryResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

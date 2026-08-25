@@ -14,7 +14,7 @@ import java.util.List;
  * {@link #meta} for envelope info — total / returned counts, universe
  * size, paging, the caller's tier, and snapshot {@code as_of}.
  */
-public final class ScreenerResponse {
+public final class ScreenerResponse extends FlashAlphaResponse {
 
     /** Result envelope — counts, paging, tier, and snapshot timestamp. */
     @SerializedName("meta")

@@ -21,7 +21,7 @@ import java.util.List;
  * {@link Integer}, {@link Boolean}) so {@code null} can represent values
  * the API could not compute.
  */
-public final class StockSummaryResponse {
+public final class StockSummaryResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

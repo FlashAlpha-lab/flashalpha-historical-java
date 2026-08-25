@@ -13,7 +13,7 @@ import com.google.gson.annotations.SerializedName;
  *
  * <p>See <a href="https://lab.flashalpha.com">https://lab.flashalpha.com</a>.
  */
-public final class ExposureLevelsResponse {
+public final class ExposureLevelsResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

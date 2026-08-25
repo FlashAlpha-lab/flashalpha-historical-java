@@ -29,7 +29,7 @@ import java.util.List;
  *
  * <p>Returns 403 {@code tier_restricted} for anything below Alpha plan.
  */
-public final class VrpResponse {
+public final class VrpResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;
