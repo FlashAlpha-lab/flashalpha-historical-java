@@ -27,7 +27,7 @@ public class DataAsOf {
     @SerializedName("equity_options_feed")
     public String equityOptionsFeed;
 
-    /** Index spot - SPX, NDX, RUT, VIX. */
+    /** Index spot - SPX, RUT, VIX and the other index roots. */
     @SerializedName("index_feed")
     public String indexFeed;
 
