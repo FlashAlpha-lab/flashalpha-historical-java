@@ -45,12 +45,12 @@ delivered to the node that answered, plus `endpoint_version` identifying the dep
 that produced it.
 
 ```java
-GexResponse gex = client.gex("SPY", ReplayOptions.at("2024-03-15T14:30:00Z"));
+GexResponse gex = client.gexTyped("SPY", "2024-03-15T14:30:00Z");
 
 gex.archiveAsOf.equityOptionsFeed;  // "2024-03-15T14:29:58.100Z"  the rows replayed
 gex.archiveAsOf.oiFeed;             // "2024-03-14T20:00:00.000Z"  prior session's close
 gex.dataAsOf.equityOptionsFeed;     // null - a replay node consumes no live feed
-gex.endpointVersion;                // "2026.08.25"
+gex.endpointVersion;                // the deployment that answered
 ```
 
 Every response model extends `FlashAlphaResponse`, which carries `endpointVersion`,
