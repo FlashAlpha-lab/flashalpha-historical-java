@@ -24,7 +24,7 @@ import java.util.List;
  *
  * <p>Returns 403 {@code tier_restricted} for Free-tier users.
  */
-public class MaxPainResponse {
+public class MaxPainResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

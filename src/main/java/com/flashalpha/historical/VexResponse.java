@@ -11,7 +11,7 @@ import java.util.List;
  * {@link #netVex} scalar and a plain-English
  * {@link #vexInterpretation} of the prevailing dealer-vol cross-effect.
  */
-public final class VexResponse {
+public final class VexResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

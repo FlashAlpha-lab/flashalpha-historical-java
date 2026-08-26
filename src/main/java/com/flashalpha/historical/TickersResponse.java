@@ -20,7 +20,7 @@ import java.util.List;
  *       {@code null} on this filtered shape.</li>
  * </ul>
  */
-public final class TickersResponse {
+public final class TickersResponse extends FlashAlphaResponse {
 
     /** All supported symbols and their coverage windows. {@code null} on the filtered single-symbol shape. */
     @SerializedName("tickers")

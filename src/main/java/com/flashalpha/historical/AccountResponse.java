@@ -9,7 +9,7 @@ import com.google.gson.annotations.SerializedName;
  * Use {@link #remaining} to gate workload before the next reset, and
  * {@link #resetsAt} (ET wall-clock string) to schedule replenished work.
  */
-public final class AccountResponse {
+public final class AccountResponse extends FlashAlphaResponse {
 
     /** Stable opaque user identifier. */
     @SerializedName("user_id")

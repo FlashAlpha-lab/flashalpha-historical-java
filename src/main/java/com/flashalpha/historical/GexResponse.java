@@ -11,7 +11,7 @@ import java.util.List;
  * regime-defining {@link #gammaFlip}, the headline {@link #netGex}
  * scalar, and a {@link #netGexLabel} regime classification.
  */
-public final class GexResponse {
+public final class GexResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

@@ -13,7 +13,7 @@ import java.util.List;
  * greeks surfaces (vanna, charm, volga, speed) on a strike-by-expiry
  * grid.
  */
-public final class AdvVolatilityResponse {
+public final class AdvVolatilityResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

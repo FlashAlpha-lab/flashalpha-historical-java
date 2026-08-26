@@ -40,7 +40,7 @@ import java.util.List;
  * traders. See <a href="https://lab.flashalpha.com">https://lab.flashalpha.com</a>
  * and <a href="https://flashalpha.com">https://flashalpha.com</a>.
  */
-public final class ZeroDteResponse {
+public final class ZeroDteResponse extends FlashAlphaResponse {
 
     /** Echoed from the request path (e.g. {@code "SPY"}). */
     @SerializedName("symbol")

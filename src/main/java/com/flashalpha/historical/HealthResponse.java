@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName;
  * <p>Public liveness probe. Returns a single {@link #status} string —
  * typically {@code "ok"} when the API is healthy.
  */
-public final class HealthResponse {
+public final class HealthResponse extends FlashAlphaResponse {
 
     /** Health status string — typically {@code "ok"}. */
     @SerializedName("status")

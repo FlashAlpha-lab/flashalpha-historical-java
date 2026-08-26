@@ -17,7 +17,7 @@ import java.util.List;
  * preserved as raw JSON ({@link JsonElement}) so callers can adapt as
  * the API evolves.
  */
-public final class SurfaceResponse {
+public final class SurfaceResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

@@ -10,7 +10,7 @@ import java.util.List;
  * <p>Strike-by-strike net dealer delta exposure (DEX) plus the headline
  * {@link #netDex} scalar.
  */
-public final class DexResponse {
+public final class DexResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;

@@ -9,7 +9,7 @@ import java.util.List;
  *
  * <p>Symbols available for replay through the historical grid.
  */
-public final class SymbolsResponse {
+public final class SymbolsResponse extends FlashAlphaResponse {
 
     /** Symbols available for historical replay. */
     @SerializedName("symbols")

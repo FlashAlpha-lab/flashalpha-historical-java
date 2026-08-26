@@ -16,7 +16,7 @@ import java.util.List;
  * {@link Integer}) so {@code null} can represent values the API could not
  * compute (sparse history, bad chain, fitter failure, etc.).
  */
-public final class VolatilityResponse {
+public final class VolatilityResponse extends FlashAlphaResponse {
 
     @SerializedName("symbol")
     public String symbol;
