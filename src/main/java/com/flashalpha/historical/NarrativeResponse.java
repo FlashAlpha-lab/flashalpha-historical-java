@@ -53,6 +53,8 @@ public final class NarrativeResponse extends FlashAlphaResponse {
         @SerializedName("net_gex_change_pct") public Double netGexChangePct;
         @SerializedName("vix") public Double vix;
         @SerializedName("gamma_flip") public Double gammaFlip;
+        /** {@code "available"}, or the reason {@link #gammaFlip} was withheld (e.g. {@code "no_boundary"}). Treat any value other than {@code "available"} as no flip level. */
+        @SerializedName("gamma_flip_status") public String gammaFlipStatus;
         @SerializedName("call_wall") public Double callWall;
         @SerializedName("put_wall") public Double putWall;
         /** {@code "positive_gamma"} | {@code "negative_gamma"} | {@code "unknown"}. */
