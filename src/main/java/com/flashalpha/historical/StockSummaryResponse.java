@@ -121,6 +121,8 @@ public final class StockSummaryResponse extends FlashAlphaResponse {
         @SerializedName("net_vex") public Double netVex;
         @SerializedName("net_chex") public Double netChex;
         @SerializedName("gamma_flip") public Double gammaFlip;
+        /** {@code "available"}, or the reason {@link #gammaFlip} was withheld (e.g. {@code "no_boundary"}). Treat any value other than {@code "available"} as no flip level. */
+        @SerializedName("gamma_flip_status") public String gammaFlipStatus;
         @SerializedName("call_wall") public Double callWall;
         @SerializedName("put_wall") public Double putWall;
         @SerializedName("max_pain") public Double maxPain;

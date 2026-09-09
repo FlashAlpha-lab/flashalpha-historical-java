@@ -147,6 +147,8 @@ public final class VrpResponse extends FlashAlphaResponse {
         @SerializedName("vrp_regime") public String vrpRegime;
         @SerializedName("net_gex") public Double netGex;
         @SerializedName("gamma_flip") public Double gammaFlip;
+        /** {@code "available"}, or the reason {@link #gammaFlip} was withheld (e.g. {@code "no_boundary"}). Treat any value other than {@code "available"} as no flip level. */
+        @SerializedName("gamma_flip_status") public String gammaFlipStatus;
     }
 
     /** 0-100 strategy suitability scores. Any field can be {@code null} on historical. */

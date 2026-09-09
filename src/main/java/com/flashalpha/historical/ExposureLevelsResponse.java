@@ -36,6 +36,15 @@ public final class ExposureLevelsResponse extends FlashAlphaResponse {
          */
         @SerializedName("gamma_flip") public Double gammaFlip;
 
+        /**
+         * Why {@link #gammaFlip} is populated or withheld. Reads {@code "available"}
+         * when a flip level was published, otherwise a reason code such as
+         * {@code "no_boundary"}, {@code "insufficient_local_coverage"} or
+         * {@code "sensitive_root"}. New codes can be added at any time, so treat
+         * any value other than {@code "available"} as no flip level available.
+         */
+        @SerializedName("gamma_flip_status") public String gammaFlipStatus;
+
         @SerializedName("max_positive_gamma") public Double maxPositiveGamma;
         @SerializedName("max_negative_gamma") public Double maxNegativeGamma;
 
