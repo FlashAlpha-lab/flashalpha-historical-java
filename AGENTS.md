@@ -155,10 +155,10 @@ for exactly that reason. Treat anything other than `"available"` as "no flip
 level", and surface the code itself when explaining why.
 
 When the flip is withheld, `regime` reads `"unknown"` rather than
-`"positive_gamma"` / `"negative_gamma"`. Fields derived from the flip
-(`spot_vs_flip`, `spot_to_flip_pct`, `distance_to_flip_dollars`,
-`distance_to_flip_sigmas`) have nothing to compute against, so guard them
-the same way.
+`"positive_gamma"` / `"negative_gamma"`, and the gamma-dependent VRP outputs
+return null. The fields derived from the flip (`spot_vs_flip`,
+`spot_to_flip_pct`, `distance_to_flip_dollars`, `distance_to_flip_sigmas`)
+have nothing to compute against, so guard them the same way.
 
 In a backtest this matters more than live: a null flip is a legitimate
 observation for that minute, so skip the bar rather than carrying the last
