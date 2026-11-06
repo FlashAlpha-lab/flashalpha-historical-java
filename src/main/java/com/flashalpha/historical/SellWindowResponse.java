@@ -10,8 +10,8 @@ import java.util.List;
  * million backtests.
  *
  * <p>Own response shape, not the strategy decision envelope. {@link #spot},
- * {@link #quotedAt} and {@link #legsIndicative} are set when a window sells, and null
- * otherwise. Use the Typed client method to obtain an instance.
+ * {@link #quotedAt} and {@link #legsIndicative} are set when a window sells and an option
+ * chain could be loaded, and null otherwise. Use the Typed client method to obtain an instance.
  *
  * <p>Docs: <a href="https://flashalpha.com/docs/historical-sell-window">https://flashalpha.com/docs/historical-sell-window</a>
  */
