@@ -619,6 +619,32 @@ public class FlashAlphaHistoricalClient {
         return gson.fromJson(raw, AdvVolatilityResponse.class);
     }
 
+    // ── sell-window (own response shape) ──────────────────────────────
+
+    /**
+     * Replays the sell-window answer for any session since 2018, with strikes from the
+     * archive chain at {@code at}. The backtests entered at 09:35 ET, so
+     * {@code <session>T09:35:00} returns the backtest's entry strikes. The session switches
+     * at the close: a date-only {@code at} reads 16:00 ET and returns the answer for the
+     * next session. SPY, QQQ and IWM; any other symbol returns every window as
+     * {@code unavailable}. Requires Alpha+.
+     */
+    public JsonObject sellWindow(String symbol, String at) {
+        return get("/v1/strategies/sell-window/" + seg(symbol), atMap(at));
+    }
+
+    public JsonObject sellWindow(String symbol, LocalDateTime at) { return sellWindow(symbol, formatAt(at)); }
+
+    /** Strongly-typed variant of {@link #sellWindow(String, String)} → {@link SellWindowResponse}. */
+    public SellWindowResponse sellWindowTyped(String symbol, String at) {
+        return gson.fromJson(sellWindow(symbol, at), SellWindowResponse.class);
+    }
+
+    /** Strongly-typed variant of {@link #sellWindow(String, LocalDateTime)} → {@link SellWindowResponse}. */
+    public SellWindowResponse sellWindowTyped(String symbol, LocalDateTime at) {
+        return sellWindowTyped(symbol, formatAt(at));
+    }
+
     // ── VRP ───────────────────────────────────────────────────────────
 
     /** VRP dashboard with date-bounded percentile history (no future leakage). */
