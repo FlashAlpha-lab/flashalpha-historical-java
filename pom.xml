@@ -7,7 +7,7 @@
 
     <groupId>com.flashalpha</groupId>
     <artifactId>flashalpha-historical</artifactId>
-    <version>0.4.0-RC13</version>
+    <version>0.4.0-RC14</version>
     <packaging>jar</packaging>
 
     <name>FlashAlpha Historical Java SDK</name>
@@ -15,6 +15,7 @@
         Java SDK for the FlashAlpha Historical API — point-in-time replay of GEX,
         gamma flip, VRP, narrative, max pain, 0DTE, and the full stock summary at any
         minute back to 2017-01-03. Backtest options strategies against 80B+ option rows.
+        Replay the sell-window sell-or-skip call for any session since 2018.
         Supports Java 11+.
     </description>
     <url>https://historical.flashalpha.com</url>

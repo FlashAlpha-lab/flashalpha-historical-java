@@ -1099,4 +1099,16 @@ public class IntegrationTest {
             assertNotNull("strikes[0].net_gex", s.netGex);
         }
     }
+
+    // ── sell-window ───────────────────────────────────────────────────────
+
+    @Test
+    public void sellWindow_ReplaysEntryStrikes() {
+        SellWindowResponse r = hx.sellWindowTyped("SPY", "2026-10-16T09:35:00");
+        assertEquals("2026-10-16", r.session);
+        assertEquals(4, r.windows.size());
+        assertEquals("sell", r.windows.get(1).action);
+        assertNotNull(r.windows.get(1).candidates.get(0).legs.get(0).strike);
+        assertNotNull(r.archiveAsOf);
+    }
 }

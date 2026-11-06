@@ -141,4 +141,31 @@ public class ClientTest {
         assertNotNull(req);
         assertTrue(req.getPath().contains("at=2025-06-18T12%3A00%3A00"));
     }
+
+    // ── sell-window ────────────────────────────────────────────────────
+
+    @Test
+    public void sellWindowTyped_SendsAtAndBindsEveryField() throws Exception {
+        enqueue(200, "{\"symbol\":\"SPY\",\"session\":\"2026-10-16\",\"spot\":772.255,\"quoted_at\":\"2026-10-16T13:35:00Z\",\"legs_indicative\":false,\"windows\":[{\"expiry\":\"2026-10-16\",\"days_to_expiry\":0,\"action\":\"sell\",\"candidates\":[{\"structure\":\"short_put\",\"exit\":\"expiry\",\"legs\":[{\"side\":\"sell\",\"quantity\":1,\"type\":\"put\",\"strike\":769,\"delta\":-0.19,\"bid\":0.39,\"ask\":0.4}],\"mid_credit\":0.395}]},{\"expiry\":\"2026-10-23\",\"days_to_expiry\":7,\"action\":\"skip\"},{\"expiry\":\"2026-10-30\",\"days_to_expiry\":14,\"action\":\"skip\"},{\"action\":\"unavailable\"}],\"endpoint_version\":\"2026.09.30\",\"data_as_of\":{\"node\":\"f3\"},\"archive_as_of\":{\"node\":\"f3\"}}");
+        SellWindowResponse r = client.sellWindowTyped("SPY", "2026-10-16T09:35:00");
+        RecordedRequest req = server.takeRequest(2, TimeUnit.SECONDS);
+        assertNotNull(req);
+        assertTrue(req.getPath().startsWith("/v1/strategies/sell-window/SPY"));
+        assertTrue(req.getPath().contains("at=2026-10-16T09%3A35%3A00"));
+        assertEquals(4, r.windows.size());
+        SellWindowResponse.Candidate trade = r.windows.get(0).candidates.get(0);
+        assertEquals(0.395, trade.midCredit, 0.0001);
+        assertEquals(769.0, trade.legs.get(0).strike, 0.0001);
+        assertNull(r.windows.get(3).expiry);
+        assertEquals("f3", r.archiveAsOf.node);
+    }
+
+    @Test
+    public void sellWindow_LocalDateTimeOverload_FormatsAt() throws Exception {
+        enqueue(200, "{\"symbol\":\"SPY\"}");
+        client.sellWindow("SPY", LocalDateTime.of(2026, 10, 16, 9, 35, 0));
+        RecordedRequest req = server.takeRequest(2, TimeUnit.SECONDS);
+        assertNotNull(req);
+        assertTrue(req.getPath().contains("at=2026-10-16T09%3A35%3A00"));
+    }
 }
