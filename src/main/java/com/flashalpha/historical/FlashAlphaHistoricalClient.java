@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -75,6 +76,17 @@ public class FlashAlphaHistoricalClient {
 
     private static String seg(String s) {
         return URLEncoder.encode(s, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    /**
+     * Strike as a plain, locale-independent decimal: 672.5 becomes {@code "672.5"} and 670
+     * becomes {@code "670"}. Never scientific notation and never rounded.
+     */
+    private static String strikeParam(double strike) {
+        if (!Double.isFinite(strike)) {
+            throw new IllegalArgumentException("strike must be a finite number, got " + strike);
+        }
+        return BigDecimal.valueOf(strike).stripTrailingZeros().toPlainString();
     }
 
     private JsonObject get(String path) { return get(path, null); }
@@ -507,6 +519,91 @@ public class FlashAlphaHistoricalClient {
      */
     public ZeroDteResponse zeroDteTyped(String symbol, LocalDateTime at) {
         return zeroDteTyped(symbol, formatAt(at));
+    }
+
+    // ── Gamma context: expiry impact + strike dependency (SPY, QQQ) ───
+
+    /**
+     * Compares the current SPY or QQQ gamma distribution with the same captured inputs
+     * after excluding one expiry. Spot, Greeks and open interest are held fixed, so this
+     * measures how much of today's concentration depends on one maturity. It is not a
+     * forecast of post-expiry prices, dealer hedging or the next session's chain.
+     *
+     * <p>Replays the same calculation at {@code at}. A date-only {@code at} uses 15:55 ET.
+     * Results are model reconstructions from archived quotes; original publication and OI
+     * revision times are unverified. Requires Alpha or higher. Other symbols return 422
+     * {@code unsupported_symbol}.
+     *
+     * @param symbol {@code SPY} or {@code QQQ}.
+     * @param at     ET wall-clock minute string, e.g. {@code "2026-10-09T15:55:00"}.
+     * @param expiry {@code yyyy-MM-dd} (nullable). Defaults to the nearest active eligible
+     *               expiry and must be one of {@code available_expiries}.
+     * @param limit  1-20 (nullable, default 5). Sets the rows in
+     *               {@code impact.largest_gross_reductions} and
+     *               {@code impact.strongest_remaining_concentrations}; totals and
+     *               {@code strikes} always use the full eligible chain.
+     */
+    public JsonObject expiryImpact(String symbol, String at, String expiry, Integer limit) {
+        Map<String, String> p = atMap(at);
+        if (expiry != null) p.put("expiry", expiry);
+        if (limit  != null) p.put("limit", limit.toString());
+        return get("/v1/exposure/expiry-impact/" + seg(symbol), p);
+    }
+
+    /** {@link #expiryImpact(String, String, String, Integer)} with the default expiry and limit. */
+    public JsonObject expiryImpact(String symbol, String at) { return expiryImpact(symbol, at, null, null); }
+
+    public JsonObject expiryImpact(String symbol, LocalDateTime at) { return expiryImpact(symbol, formatAt(at)); }
+
+    /** Strongly-typed variant of {@link #expiryImpact(String, String, String, Integer)} → {@link ExpiryImpactResponse}. */
+    public ExpiryImpactResponse expiryImpactTyped(String symbol, String at, String expiry, Integer limit) {
+        return gson.fromJson(expiryImpact(symbol, at, expiry, limit), ExpiryImpactResponse.class);
+    }
+
+    /** Strongly-typed variant of {@link #expiryImpact(String, String)} → {@link ExpiryImpactResponse}. */
+    public ExpiryImpactResponse expiryImpactTyped(String symbol, String at) {
+        return expiryImpactTyped(symbol, at, null, null);
+    }
+
+    /** Strongly-typed variant of {@link #expiryImpact(String, LocalDateTime)} → {@link ExpiryImpactResponse}. */
+    public ExpiryImpactResponse expiryImpactTyped(String symbol, LocalDateTime at) {
+        return expiryImpactTyped(symbol, formatAt(at));
+    }
+
+    /**
+     * Attributes the gamma at one exact observed SPY or QQQ strike to its expiries: does
+     * the level depend on a single maturity? It reports concentration at that strike, not
+     * a support/resistance probability.
+     *
+     * <p>Replays the same calculation at {@code at}. A date-only {@code at} uses 15:55 ET.
+     * Results are model reconstructions from archived quotes; original publication and OI
+     * revision times are unverified. Requires Alpha or higher. Other symbols return 422
+     * {@code unsupported_symbol}.
+     *
+     * @param symbol {@code SPY} or {@code QQQ}.
+     * @param at     ET wall-clock minute string, e.g. {@code "2026-10-09T15:55:00"}.
+     * @param strike Required. Must be an exact listed strike; the request is never snapped
+     *               to a nearby strike (404 {@code strike_not_found}). Sent as a plain
+     *               decimal, for example {@code 672.5}.
+     */
+    public JsonObject strikeDependency(String symbol, String at, double strike) {
+        Map<String, String> p = atMap(at);
+        p.put("strike", strikeParam(strike));
+        return get("/v1/exposure/strike-dependency/" + seg(symbol), p);
+    }
+
+    public JsonObject strikeDependency(String symbol, LocalDateTime at, double strike) {
+        return strikeDependency(symbol, formatAt(at), strike);
+    }
+
+    /** Strongly-typed variant of {@link #strikeDependency(String, String, double)} → {@link StrikeDependencyResponse}. */
+    public StrikeDependencyResponse strikeDependencyTyped(String symbol, String at, double strike) {
+        return gson.fromJson(strikeDependency(symbol, at, strike), StrikeDependencyResponse.class);
+    }
+
+    /** Strongly-typed variant of {@link #strikeDependency(String, LocalDateTime, double)} → {@link StrikeDependencyResponse}. */
+    public StrikeDependencyResponse strikeDependencyTyped(String symbol, LocalDateTime at, double strike) {
+        return strikeDependencyTyped(symbol, formatAt(at), strike);
     }
 
     // ── Max Pain ──────────────────────────────────────────────────────

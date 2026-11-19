@@ -72,6 +72,8 @@ All accept an `at` parameter alongside the live signature.
 - `/v1/exposure/zero-dte/{symbol}` — same-day-expiration deep dive
   at `at`.
 - `/v1/exposure/narrative/{symbol}` — verbal output at `at`.
+- `/v1/exposure/expiry-impact/{symbol}` (`expiryImpactTyped`): Compares the current SPY or QQQ gamma distribution with the same captured inputs after excluding one expiry, replayed at `at`. Requires Alpha or higher.
+- `/v1/exposure/strike-dependency/{symbol}` (`strikeDependencyTyped`): Attributes the gamma at one exact observed SPY or QQQ strike to its expiries: does the level depend on a single maturity? Replayed at `at`. Requires Alpha or higher.
 - `/v1/maxpain/{symbol}` — max pain + pin probability at `at`.
 - `/v1/vrp/{symbol}` — variance risk premium at `at`.
 - `/v1/stock/{symbol}/summary` — full one-shot dashboard at `at`.
