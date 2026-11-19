@@ -1111,4 +1111,27 @@ public class IntegrationTest {
         assertNotNull(r.windows.get(1).candidates.get(0).legs.get(0).strike);
         assertNotNull(r.archiveAsOf);
     }
+
+    // ── expiry impact + strike dependency ─────────────────────────────────
+
+    @Test
+    public void expiryImpact_ReplaysAt() {
+        ExpiryImpactResponse r = hx.expiryImpactTyped("SPY", "2026-10-09T15:55:00", null, 3);
+        assertEquals("SPY", r.symbol);
+        assertEquals("2026-10-09", r.selectedExpiry);
+        assertNotNull(r.current.grossGexUsd);
+        assertTrue(r.impact.largestGrossReductions.size() <= 3);
+        assertFalse(r.strikes.isEmpty());
+        assertNotNull(r.archiveAsOf);
+    }
+
+    @Test
+    public void strikeDependency_ReplaysAt() {
+        StrikeDependencyResponse r = hx.strikeDependencyTyped("SPY", "2026-10-09T15:55:00", 670);
+        assertEquals(670.0, r.strike, 0.0);
+        assertEquals("strike_attribution", r.analysisType);
+        assertFalse(r.byExpiry.isEmpty());
+        assertNotNull(r.byExpiry.get(0).valuationCutoffAt);
+        assertNotNull(r.archiveAsOf);
+    }
 }

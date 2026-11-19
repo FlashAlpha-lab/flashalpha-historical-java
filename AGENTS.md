@@ -98,7 +98,7 @@ Compare them; do not parse them for meaning.
 <dependency>
     <groupId>com.flashalpha</groupId>
     <artifactId>flashalpha-historical</artifactId>
-    <version>0.4.0-RC14</version>
+    <version>0.4.0-RC15</version>
 </dependency>
 ```
 

@@ -14,7 +14,7 @@ in the same response shape as the live API.
 <dependency>
     <groupId>com.flashalpha</groupId>
     <artifactId>flashalpha-historical</artifactId>
-    <version>0.4.0-RC14</version>
+    <version>0.4.0-RC15</version>
 </dependency>
 ```
 
@@ -76,6 +76,22 @@ Cut the risk or earn more. Keep your trade size and the deepest drawdown falls 7
 **Read more:** [API docs](https://flashalpha.com/docs/historical-sell-window?utm_source=github&utm_medium=readme&utm_campaign=repo-flashalpha-historical-java&utm_content=sell-window) | [trading guide](https://flashalpha.com/articles/complete-guide-trading-sell-window-spy-qqq-iwm?utm_source=github&utm_medium=readme&utm_campaign=repo-flashalpha-historical-java&utm_content=sell-window) | [every backtested trade](https://flashalpha.com/articles/sell-window-backtest-every-trade-2018-2026?utm_source=github&utm_medium=readme&utm_campaign=repo-flashalpha-historical-java&utm_content=sell-window) | [sell-window in depth](https://github.com/FlashAlpha-lab/flashalpha-historical-java/blob/main/docs/sell-window.md) | [plans](https://flashalpha.com/pricing?utm_source=github&utm_medium=readme&utm_campaign=repo-flashalpha-historical-java&utm_content=sell-window) | [live forward test on Discord](https://discord.gg/UtH22J8df2)
 
 *Backtest on SPY, QQQ and IWM, January 2018 to October 2026, at halfway fills and $1 per contract. At one contract set per signal, following it made $945,541 on 20,883 trades; selling every day made $2,321,150 on 56,975. At 3.76 times the contracts, both fell $958,924 at their deepest, and the worst month was -$642,135 against -$307,241. Past results do not guarantee future returns, and short options can lose more than the premium collected. The skip call applies to new trades, so it cannot protect open positions from a sudden shock. This is data, not investment advice.*
+
+## Expiry impact and strike dependency replay (SPY, QQQ)
+
+Replay either calculation at any minute with `at`. A date-only `at` uses 15:55 ET.
+Results are model reconstructions from archived quotes. Requires Alpha or higher.
+
+```java
+FlashAlphaHistoricalClient hx = new FlashAlphaHistoricalClient(System.getenv("FLASHALPHA_API_KEY"));
+
+ExpiryImpactResponse ei = hx.expiryImpactTyped("SPY", "2026-10-09T15:55:00");
+System.out.println(ei.selectedExpiry + " removed_gross_share_pct=" + ei.impact.removedGrossSharePct);
+System.out.println("net_sign_changed=" + ei.impact.netSignChanged);
+
+StrikeDependencyResponse sd = hx.strikeDependencyTyped("SPY", "2026-10-09T15:55:00", 670);
+System.out.println("dominant_expiry=" + sd.dominantExpiry + " (" + sd.dominantExpirySharePct + "%)");
+```
 
 ## Data provenance: `data_as_of`
 
@@ -189,6 +205,8 @@ for (Replay.Step s : steps) {
 | `exposureLevels(s, at)` | `/v1/exposure/levels/{s}` |
 | `narrative(s, at)` | `/v1/exposure/narrative/{s}` |
 | `zeroDte(s, at, strikeRange?)` | `/v1/exposure/zero-dte/{s}` |
+| `expiryImpact(s, at, expiry?, limit?)` / `expiryImpactTyped(...)` | `/v1/exposure/expiry-impact/{s}` |
+| `strikeDependency(s, at, strike)` / `strikeDependencyTyped(s, at, strike)` | `/v1/exposure/strike-dependency/{s}` |
 | `maxPain(s, at, expiration?)` | `/v1/maxpain/{s}` |
 | `stockSummary(s, at)` | `/v1/stock/{s}/summary` |
 | `volatility(s, at)` | `/v1/volatility/{s}` |
